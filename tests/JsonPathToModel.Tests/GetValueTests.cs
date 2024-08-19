@@ -61,32 +61,50 @@ public class GetValueTests
         var path = "$.WrongProperty";
         var result = navi.GetValue(model, path);
         Assert.True(result.IsFailed);
-        Assert.Equal($"Path '{path}' not found", result.Errors.Single().Message);
+        Assert.Equal($"Path '{path}': property 'WrongProperty' not found", result.Errors.Single().Message);
 
         path = "$.WrongProperty.WrongSubProperty";
         result = navi.GetValue(model, path);
         Assert.True(result.IsFailed);
-        Assert.Equal($"Path '{path}' not found", result.Errors.Single().Message);
+        Assert.Equal($"Path '{path}': property 'WrongProperty' not found", result.Errors.Single().Message);
 
         path = "$.Nested[0].WrongSubProperty";
         result = navi.GetValue(model, path);
         Assert.True(result.IsFailed);
-        Assert.Equal($"Path '{path}' not found", result.Errors.Single().Message);
+        Assert.Equal($"Path '{path}': property 'WrongSubProperty' not found", result.Errors.Single().Message);
 
         path = "$.WrongProperty.Nested[0].Id";
         result = navi.GetValue(model, path);
         Assert.True(result.IsFailed);
-        Assert.Equal($"Path '{path}' not found", result.Errors.Single().Message);
+        Assert.Equal($"Path '{path}': property 'WrongProperty' not found", result.Errors.Single().Message);
 
         path = "$.Nested[100].Id";
         result = navi.GetValue(model, path);
         Assert.True(result.IsFailed);
-        Assert.Equal($"Path '{path}': IList index is out of range", result.Errors.Single().Message);
+        Assert.Equal($"Path '{path}': IList index 100 is out of range", result.Errors.Single().Message);
 
         path = "$.Nested[wrong].Id";
         result = navi.GetValue(model, path);
         Assert.True(result.IsFailed);
-        Assert.Equal($"Path '{path}': IList index is not int", result.Errors.Single().Message);
+        Assert.Equal($"Path '{path}': IList index 'wrong' is not int", result.Errors.Single().Message);
+    }
+
+    [Fact]
+    public void GetValue_Should_ReturnError_WhenManyValuesFound()
+    {
+        var model = new SampleModel
+        {
+            Id = "7",
+            Name = "Gerry",
+            Nested = new([new SampleNested { Id = "xyz", Name = "Pedro" }, new SampleNested { Id = "xzz", Name = "Antuan" }])
+        };
+
+        var navi = new JsonPathModelNavigator();
+
+        var path = "$.Nested[*].Id";
+        var result = navi.GetValue(model, path);
+        Assert.True(result.IsFailed);
+        Assert.Equal($"Path '{path}': expected one value but 2 value(s) found", result.Errors.Single().Message);
     }
 
     [Fact]

@@ -6,7 +6,7 @@ namespace JsonPathToModel.Tests;
 public class SelectValuesTests
 {
     [Fact]
-    public void SelectValues_Test()
+    public void SelectValues_ShouldReturn_SingleValue()
     {
         var model = new SampleModel
         {

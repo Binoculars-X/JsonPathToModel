@@ -11,6 +11,6 @@ public interface IJsonPathModelNavigator
 {
     Result<object> GetValue(object model, string modelBinding);
     Result<IEnumerable<object>> GetItems(object model, string itemsBinding);
-    void SetValue(object model, string modelBinding, object val);
+    Result SetValue(object model, string modelBinding, object val);
     Result<List<object?>> SelectValues(object model, string modelBinding);
 }
