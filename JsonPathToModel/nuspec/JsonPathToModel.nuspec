@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>JsonPathToModel</id>
+    <version>1.0.1</version>
+    <authors>Binoculars X</authors>
+    <owners>Binoculars X</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <description>Use JsonPath to navigate through memory model objects to get and set values</description>
+    <copyright>Copyright (c) 2024 Binoculars X</copyright>
+    <tags>navigate jsonpath json path memory graph model object</tags>
+    <readme>readme.md</readme>
+    <projectUrl>https://github.com/Binoculars-X/JsonPathToModel</projectUrl>
+    <dependencies>
+		<group targetFramework="net8.0">
+          <dependency id="FluentResults" version="3.16.0" />
+		</group>
+    </dependencies>
+    <contentFiles>
+      <files include="**\*.json" buildAction="None" />
+      <files include="**\*.cmd" buildAction="None" />
+      <files include="**\*.txt" buildAction="None" />
+      <files include="**\*.sql" buildAction="None" />
+    </contentFiles>
+  </metadata>
+  <files>
+    <file src="readme.md" />
+    <file src="..\bin\Release\net8.0\JsonPathToModel.dll" target="lib\net8.0\JsonPathToModel.dll" />
+  </files>
+</package>

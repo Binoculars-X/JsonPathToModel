@@ -6,29 +6,41 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using FluentResults;
 
 namespace JsonPathToModel;
 
 public class JsonPathModelNavigator : IJsonPathModelNavigator
 {
-    public IEnumerable<object> GetItems(object model, string itemsBinding)
+    public Result<IEnumerable<object>> GetItems(object model, string itemsBinding)
     {
-        var result = GetValue(model, itemsBinding);
-        return result as IEnumerable<object>;
-    }
+        var result = GetValue(model, itemsBinding) as IEnumerable<object>;
 
-    public List<object?> SelectValues(object model, string modelBinding)
+        if (result != null)
+        {
+            return Result.Ok(result);
+        }
+
+        return Result.Fail("Not found");
+    }
+ 
+    public Result<List<object?>> SelectValues(object model, string modelBinding)
     {
         if (modelBinding == "")
         {
-            return [model];
+            return Result.Ok(new[] { model }.ToList())!;
         }
 
         var selectResult = SelectLastPropertiesIterateThroughPath(model, modelBinding);
 
+        if (selectResult.IsFailed)
+        {
+            return Result.Fail(selectResult.Errors);
+        }
+
         var result = new List<object?>();
 
-        foreach (var itemResult in selectResult)
+        foreach (var itemResult in selectResult.Value)
         {
             result.Add(itemResult.Resolve());
         }
@@ -36,7 +48,91 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
         return result;
     }
 
-    private static List<SelectPropertyResult> SelectLastPropertiesIterateThroughPath(object model, string modelBinding)
+    public Result<object?> GetValue(object model, string modelBinding)
+    {
+        if (modelBinding == "")
+        {
+            return model;
+        }
+
+        var selectResult = SelectLastPropertiesIterateThroughPath(model, modelBinding);
+
+        if (selectResult.IsFailed)
+        {
+            return Result.Fail(selectResult.Errors);
+        }
+
+        if (selectResult.Value == null || !selectResult.Value.Any())
+        {
+            return Result.Ok((object?)null);
+        }
+
+        if (selectResult.Value.Count == 1)
+        {
+            return selectResult.Value.Single().Resolve();
+        }
+
+        return Result.Fail($"Path '{modelBinding}': expected one value but {selectResult.Value.Count} value(s) found");
+    }
+
+    public Result SetValue(object model, string modelBinding, object val)
+    {
+        var selectResult = SelectLastPropertiesIterateThroughPath(model, modelBinding);
+
+        if (selectResult.IsFailed)
+        {
+            return Result.Fail(selectResult.Errors);
+        }
+
+        if (selectResult.Value == null || !selectResult.Value.Any())
+        {
+            return Result.Ok();
+        }
+
+        if (selectResult.Value.Count > 1)
+        {
+            return Result.Fail($"Path '{modelBinding}': expected one value but {selectResult.Value.Count} value(s) found");
+        }
+
+        var result = selectResult.Value.Single();
+        var targetObject = result.Target;
+        var property = result.Property;
+
+        if (property == null || targetObject == null || property.SetMethod == null)
+        {
+            return Result.Fail($"Path '{modelBinding}': property not found or SetMethod is null");
+        }
+
+        if (targetObject.GetType() == typeof(ExpandoObject))
+        {
+            // ToDo: this should be tested
+            (targetObject as ExpandoObject)!.SetValue(property.Name, val);
+        }
+        else if (property.PropertyType == typeof(int))
+        {
+            property.SetValue(targetObject, Convert.ToInt32(val));
+        }
+        else if (property.PropertyType == typeof(decimal))
+        {
+            property.SetValue(targetObject, Convert.ToDecimal(val));
+        }
+        else if (property.PropertyType == typeof(decimal?))
+        {
+            property.SetValue(targetObject, val == null ? (decimal?)null : Convert.ToDecimal(val));
+        }
+        else if (property.PropertyType == typeof(int?))
+        {
+            property.SetValue(targetObject, val == null ? (int?)null : Convert.ToInt32(val));
+        }
+        else
+        {
+            property.SetValue(targetObject, val);
+        }
+
+        return Result.Ok();
+    }
+
+    private static Result<List<SelectPropertyResult>?> SelectLastPropertiesIterateThroughPath(object model, string modelBinding)
     {
         var selectResult = new List<SelectPropertyResult>();
         var path = modelBinding.Replace("$", "").Split('.').Where(c => !string.IsNullOrWhiteSpace(c)).ToList();
@@ -50,22 +146,46 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
 
             foreach (var currentValue in currentValues)
             {
+                // all values from list or dictionary
                 if (propName.EndsWith("[*]"))
                 {
                     var cleanPropName = propName.Substring(0, propName.Length - 3);
                     var prop = currentValue.GetType().GetProperty(cleanPropName);
-                    var list = prop?.GetValue(currentValue) as IList;
+
+                    if (prop == null)
+                    {
+                        return Result.Fail($"Path '{modelBinding}': property '{cleanPropName}' not found");
+                    }
+
+                    var list = prop?.GetValue(currentValue);
 
                     if (list == null)
                     {
-                        // ToDo: implement scenario when json path = "$.Customer.Email[*].Value" and Email[*] is null
-                        //throw new JsonPathException("Wildcard collection property is null");
+                        // extracted from model collection is null, continue iteration
                         continue;
                     }
 
-                    foreach (var item in list)
+                    var dictObj = list as IDictionary;
+                    var listObj = list as IList;
+
+                    if (dictObj != null)
                     {
-                        iterationValues.Add(item);
+                        foreach (var item in dictObj.Values)
+                        {
+                            iterationValues.Add(item);
+                        }
+                    }
+                    else if (listObj != null)
+                    {
+                        foreach (var item in listObj)
+                        {
+                            iterationValues.Add(item);
+                        }
+                    }
+                    else
+                    {
+                        // error
+                        return Result.Fail($"Path '{modelBinding}': only IDictionary or IList properties are supported");
                     }
                 }
                 else if (propName.Contains('[') && propName.Contains(']'))
@@ -76,43 +196,71 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
                     dictKey = dictKey.Replace("'", "").Replace("\"", "");
 
                     var prop = currentValue.GetType().GetProperty(dictPropName);
+
+                    if (prop == null)
+                    {
+                        return Result.Fail($"Path '{modelBinding}': property '{dictPropName}' not found");
+                    }
+
                     var dict = prop?.GetValue(currentValue);
 
-                    var item = dict switch
+                    if (dict == null)
                     {
-                        IDictionary dictObj => dictObj[dictKey],
-                        IList listObj => listObj[
-                            int.TryParse(dictKey, out var listIdx)
-                                ? listIdx
-                                : throw new IndexOutOfRangeException($"Unable to use {dictKey} as an index")],
-                        _ => throw new NotImplementedException("Only IDictionary or IList properties are supported")
-                    };
+                        // extracted from model collection is null, continue iteration
+                        continue;
+                    }
 
-                    iterationValues.Add(item);
+                    var dictObj = dict as IDictionary;
+                    var listObj = dict as IList;
+
+                    if (dictObj != null)
+                    {
+                        if (!dictObj.Contains(dictKey))
+                        {
+                            // error
+                            return Result.Fail($"Path '{modelBinding}': IDictionary key '{dictKey}' not found");
+                        }
+
+                        iterationValues.Add(dictObj[dictKey]);
+                    }
+                    else if (listObj != null)
+                    {
+                        if (!int.TryParse(dictKey, out var listIdx))
+                        {
+                            // error
+                            return Result.Fail($"Path '{modelBinding}': IList index '{dictKey}' is not int");
+                        }
+
+                        if (listIdx >= listObj.Count)
+                        {
+                            // error
+                            return Result.Fail($"Path '{modelBinding}': IList index {dictKey} is out of range");
+                        }
+
+                        iterationValues.Add(listObj[listIdx]);
+                    }
+                    else
+                    {
+                        // error
+                        return Result.Fail($"Path '{modelBinding}': only IDictionary or IList properties are supported");
+                    }
                 }
                 else
                 {
                     var prop = currentValue.GetType().GetProperty(propName);
+
+                    if (prop == null)
+                    {
+                        return Result.Fail($"Path '{modelBinding}': property '{propName}' not found");
+                    }
+
                     var item = prop?.GetValue(currentValue);
                     iterationValues.Add(item);
                 }
-
-                //if (currentValue == null)
-                //{
-                //    // ToDo: implement scenario when middle property is null but nested value expected
-                //    // for example: json path = "$.Customer.PersonName.GivenName" and PersonName is null
-                //    //throw new NotImplementedException();
-                //    //return [null];
-                //    continue;
-                //}
             }
 
             currentValues = iterationValues;
         }
-
-
-
-        //target = currentObject;
 
         if (lastPropName.EndsWith("[*]"))
         {
@@ -122,144 +270,18 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
         // assemble all collected items to result
         foreach (var item in currentValues)
         {
-            var itemResult = new SelectPropertyResult(item, item.GetType().GetProperty(lastPropName));
+            var property = item.GetType().GetProperty(lastPropName);
+
+            if (property == null)
+            {
+                return Result.Fail($"Path '{modelBinding}': property '{lastPropName}' not found");
+            }
+
+            var itemResult = new SelectPropertyResult(item, property);
             selectResult.Add(itemResult);
         }
 
-        //if (currentObject is IList)
-        //{
-
-        //}
-
-        //var lastProp = currentObject.GetType().GetProperty(lastPropName);
-        //return lastProp;
-
         return selectResult;
-    }
-
-
-    public object GetValue(object model, string modelBinding)
-    {
-        if (modelBinding == "")
-        {
-            return model;
-        }
-
-        object targetObject;
-        string lastProperty;
-        var property = GetLastPropertyIterateThroughPath(model, modelBinding, out targetObject, out lastProperty);
-
-        if (targetObject != null && targetObject.GetType() == typeof(ExpandoObject))
-        {
-            return (targetObject as ExpandoObject).GetValue(lastProperty);
-        }
-
-        if (property == null)
-        {
-            return null;
-        }
-
-        var result = property.GetValue(targetObject);
-        return result;
-    }
-
-    public void SetValue(object model, string modelBinding, object val)
-    {
-        object targetObject;
-        string lastProperty;
-        var prop = GetLastPropertyIterateThroughPath(model, modelBinding, out targetObject, out lastProperty);
-
-        if (targetObject.GetType() == typeof(ExpandoObject))
-        {
-            (targetObject as ExpandoObject).SetValue(lastProperty, val);
-            return;
-        }
-
-        if (prop == null || targetObject == null || prop.SetMethod == null)
-        {
-            return;
-        }
-
-        if (prop.PropertyType == typeof(int))
-        {
-            prop.SetValue(targetObject, Convert.ToInt32(val));
-        }
-        else if (prop.PropertyType == typeof(decimal))
-        {
-            prop.SetValue(targetObject, Convert.ToDecimal(val));
-        }
-        else if (prop.PropertyType == typeof(decimal?))
-        {
-            prop.SetValue(targetObject, val == null ? (decimal?)null : Convert.ToDecimal(val));
-        }
-        else if (prop.PropertyType == typeof(int?))
-        {
-            prop.SetValue(targetObject, val == null ? (int?)null : Convert.ToInt32(val));
-        }
-        else
-        {
-            prop.SetValue(targetObject, val);
-        }
-    }
-
-    private static PropertyInfo GetLastPropertyIterateThroughPath(object model, string modelBinding, out object target, out string lastPropName)
-    {
-        target = null;
-        var path = modelBinding.Replace("$", "").Split('.').Where(c => !string.IsNullOrWhiteSpace(c)).ToList();
-        var currentObject = model;
-        lastPropName = path.Last();
-        path.RemoveAt(path.Count - 1);
-
-        foreach (var propName in path)
-        {
-            if (propName.EndsWith("[*]"))
-            {
-                var cleanPropName = propName.Substring(0, propName.Length - 3);
-                var prop = currentObject.GetType().GetProperty(cleanPropName);
-                var list = prop?.GetValue(currentObject);
-                currentObject = list;
-            }
-            else if (propName.Contains('[') && propName.Contains(']'))
-            {
-                var propSplit = propName.Split('[');
-                var dictPropName = propSplit[0];
-                var dictKey = propSplit[1].Split(']')[0];
-                dictKey = dictKey.Replace("'", "").Replace("\"", "");
-
-                var prop = currentObject.GetType().GetProperty(dictPropName);
-                var dict = prop?.GetValue(currentObject);
-
-                currentObject = dict switch
-                {
-                    IDictionary dictObj => dictObj[dictKey],
-                    IList listObj => listObj[
-                        int.TryParse(dictKey, out var listIdx)
-                            ? listIdx
-                            : throw new IndexOutOfRangeException($"Unable to use {dictKey} as an index")],
-                    _ => throw new NotImplementedException("Only IDictionary or IList properties are supported")
-                };
-            }
-            else
-            {
-                var prop = currentObject.GetType().GetProperty(propName);
-                currentObject = prop?.GetValue(currentObject);
-            }
-
-            if (currentObject == null)
-            {
-                return null;
-            }
-        }
-
-        target = currentObject;
-
-        if (lastPropName.EndsWith("[*]"))
-        {
-            lastPropName = lastPropName.Substring(0, lastPropName.Length - 3);
-        }
-
-        var lastProp = currentObject.GetType().GetProperty(lastPropName);
-        return lastProp;
     }
 }
 
@@ -274,78 +296,4 @@ public record SelectPropertyResult(object Target, PropertyInfo Property)
 
         return Property.GetValue(Target);
     }
-}
-
-public class JsonPathException : Exception
-{
-    public JsonPathException() { }
-
-    public JsonPathException(string message) : base(message) { }
-}
-
-public static class ExpandoObjectExtensions
-{
-    public static void SetValue(this ExpandoObject eo, string property, object value)
-    {
-        (eo as IDictionary<string, object>)[property] = value;
-    }
-
-    public static object GetValue(this ExpandoObject eo, string property)
-    {
-        return (eo as IDictionary<string, object>)[property];
-    }
-
-    public static ExpandoObject Clone(this ExpandoObject source)
-    {
-        var result = new ExpandoObject();
-        var dict = result as IDictionary<string, object>;
-        var sourceDict = source as IDictionary<string, object>;
-
-        foreach (var key in sourceDict.Keys)
-        {
-            dict[key] = sourceDict[key];
-        }
-
-        return result;
-    }
-
-    public static ExpandoObject CopyTo(this ExpandoObject source, ExpandoObject result)
-    {
-        if (source == null || result == null)
-        {
-            return null;
-        }
-
-        var dict = result as IDictionary<string, object>;
-        dict.Clear();
-        var sourceDict = source as IDictionary<string, object>;
-
-        foreach (var key in sourceDict.Keys)
-        {
-            dict[key] = sourceDict[key];
-        }
-
-        return result;
-    }
-    public static void CopyFrom(this ExpandoObject me, Dictionary<string, object> source)
-    {
-        foreach (var key in source.Keys)
-        {
-            me.SetValue(key, source[key]);
-        }
-    }
-
-    public static Dictionary<string, object> ToDict(this ExpandoObject me)
-    {
-        var dict = me as IDictionary<string, object>;
-        var result = new Dictionary<string, object>();
-
-        foreach (var key in dict.Keys)
-        {
-            result[key] = dict[key];
-        }
-
-        return result;
-    }
-
 }
