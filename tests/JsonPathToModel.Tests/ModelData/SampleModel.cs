@@ -9,8 +9,9 @@ namespace JsonPathToModel.Tests.ModelData;
 public class SampleModel
 {
     public string Id { get; set; } 
-    public string Name { get; set; }
-    public List<SampleNested> Nested { get; set; } = [];
+    public string? Name { get; set; }
+    public List<SampleNested>? Nested { get; set; } = [];
+    public Dictionary<string, SampleNested>? NestedDictionary { get; set; } = [];
 }
 
 public class SampleNested
