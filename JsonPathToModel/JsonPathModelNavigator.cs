@@ -77,10 +77,6 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
 
     public Result SetValue(object model, string modelBinding, object val)
     {
-        //object targetObject;
-        //string lastProperty;
-        //var prop = GetLastPropertyIterateThroughPath(model, modelBinding, out targetObject, out lastProperty);
-
         var selectResult = SelectLastPropertiesIterateThroughPath(model, modelBinding);
 
         if (selectResult.IsFailed)
