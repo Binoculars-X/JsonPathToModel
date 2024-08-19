@@ -51,8 +51,9 @@ public static class ReflectionHelper
                 }
                 else if (typeof(IDictionary).IsAssignableFrom(prop.PropertyType))
                 {
-                    // ToDo: implement IDictionary support
-                    throw new NotImplementedException("IDictionary is not supported yet");
+                    var path = $"{current.Path}.{prop.Name}[*]";
+                    var type = prop.PropertyType.GenericTypeArguments[1];
+                    currentProperties.Add(new Context(path, type));
                 }
                 else
                 {
@@ -61,21 +62,6 @@ public static class ReflectionHelper
                 }
             }
         }
-
-        return result;
-    }
-
-    public static bool IsPrimitive(this PropertyInfo property)
-    {
-        return property.PropertyType.IsPrimitive();
-    }
-
-    public static bool IsPrimitive(this Type type)
-    {
-        var t = type;
-
-        var result = t.IsPrimitive || t == typeof(decimal) || t == typeof(decimal?) || t == typeof(string) || t == typeof(DateTime)
-            || t == typeof(DateTime?) || t == typeof(byte[]);
 
         return result;
     }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FluentResults;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,8 +9,8 @@ namespace JsonPathToModel;
 
 public interface IJsonPathModelNavigator
 {
-    object GetValue(object model, string modelBinding);
-    IEnumerable<object> GetItems(object model, string itemsBinding);
-    void SetValue(object model, string modelBinding, object val);
-    List<object?> SelectValues(object model, string modelBinding);
+    Result<object> GetValue(object model, string modelBinding);
+    Result<IEnumerable<object>> GetItems(object model, string itemsBinding);
+    Result SetValue(object model, string modelBinding, object val);
+    Result<List<object?>> SelectValues(object model, string modelBinding);
 }
