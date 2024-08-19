@@ -1,4 +1,4 @@
-# JsonPathToModel
+﻿# JsonPathToModel
 Use JsonPath to navigate through .NET in memory models
 
 Usage:
