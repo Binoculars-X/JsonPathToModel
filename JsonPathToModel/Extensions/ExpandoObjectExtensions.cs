@@ -33,7 +33,7 @@ public static class ExpandoObjectExtensions
         return result;
     }
 
-    public static ExpandoObject CopyTo(this ExpandoObject source, ExpandoObject result)
+    public static ExpandoObject? CopyTo(this ExpandoObject source, ExpandoObject result)
     {
         if (source == null || result == null)
         {

@@ -40,7 +40,7 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
 
         var result = new List<object?>();
 
-        foreach (var itemResult in selectResult.Value)
+        foreach (var itemResult in selectResult.Value!)
         {
             result.Add(itemResult.Resolve());
         }
@@ -141,13 +141,13 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
     {
         var selectResult = new List<SelectPropertyResult>();
         var path = modelBinding.Replace("$", "").Split('.').Where(c => !string.IsNullOrWhiteSpace(c)).ToList();
-        var currentValues = new object[] { model }.ToList();
+        var currentValues = new object?[] { model }.ToList();
         var lastPropName = path.Last();
         path.RemoveAt(path.Count - 1);
 
         foreach (var propName in path)
         {
-            var iterationValues = new List<object>();
+            var iterationValues = new List<object?>();
 
             foreach (var currentValue in currentValues)
             {
@@ -163,116 +163,6 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
                 {
                     iterationValues.AddRange(currentResult.Value);
                 }
-                /*if (propName.EndsWith("[*]"))
-                {
-                    var cleanPropName = propName.Substring(0, propName.Length - 3);
-                    var prop = currentValue.GetType().GetProperty(cleanPropName);
-
-                    if (prop == null)
-                    {
-                        return Result.Fail($"Path '{modelBinding}': property '{cleanPropName}' not found");
-                    }
-
-                    var list = prop?.GetValue(currentValue);
-
-                    if (list == null)
-                    {
-                        // extracted from model collection is null, continue iteration
-                        continue;
-                    }
-
-                    var dictObj = list as IDictionary;
-                    var listObj = list as IList;
-
-                    if (dictObj != null)
-                    {
-                        foreach (var item in dictObj.Values)
-                        {
-                            iterationValues.Add(item);
-                        }
-                    }
-                    else if (listObj != null)
-                    {
-                        foreach (var item in listObj)
-                        {
-                            iterationValues.Add(item);
-                        }
-                    }
-                    else
-                    {
-                        // error
-                        return Result.Fail($"Path '{modelBinding}': only IDictionary or IList properties are supported");
-                    }
-                }
-                else if (propName.Contains('[') && propName.Contains(']'))
-                {
-                    var propSplit = propName.Split('[');
-                    var dictPropName = propSplit[0];
-                    var dictKey = propSplit[1].Split(']')[0];
-                    dictKey = dictKey.Replace("'", "").Replace("\"", "");
-
-                    var prop = currentValue.GetType().GetProperty(dictPropName);
-
-                    if (prop == null)
-                    {
-                        return Result.Fail($"Path '{modelBinding}': property '{dictPropName}' not found");
-                    }
-
-                    var dict = prop?.GetValue(currentValue);
-
-                    if (dict == null)
-                    {
-                        // extracted from model collection is null, continue iteration
-                        continue;
-                    }
-
-                    var dictObj = dict as IDictionary;
-                    var listObj = dict as IList;
-
-                    if (dictObj != null)
-                    {
-                        if (!dictObj.Contains(dictKey))
-                        {
-                            // error
-                            return Result.Fail($"Path '{modelBinding}': IDictionary key '{dictKey}' not found");
-                        }
-
-                        iterationValues.Add(dictObj[dictKey]);
-                    }
-                    else if (listObj != null)
-                    {
-                        if (!int.TryParse(dictKey, out var listIdx))
-                        {
-                            // error
-                            return Result.Fail($"Path '{modelBinding}': IList index '{dictKey}' is not int");
-                        }
-
-                        if (listIdx >= listObj.Count)
-                        {
-                            // error
-                            return Result.Fail($"Path '{modelBinding}': IList index {dictKey} is out of range");
-                        }
-
-                        iterationValues.Add(listObj[listIdx]);
-                    }
-                    else
-                    {
-                        // error
-                        return Result.Fail($"Path '{modelBinding}': only IDictionary or IList properties are supported");
-                    }
-                }
-                else
-                {
-                    var prop = currentValue.GetType().GetProperty(propName);
-
-                    if (prop == null)
-                    {
-                        return Result.Fail($"Path '{modelBinding}': property '{propName}' not found");
-                    }
-
-                    var item = prop?.GetValue(currentValue);
-                    iterationValues.Add(item);
-                }*/
             }
 
             currentValues = iterationValues;
@@ -303,20 +193,6 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
                 {
                     selectResult.Add(SelectPropertyResult.FromValue(collectionItem.Value));
                 }
-                //var finalResult = GetPropertyValues(modelBinding, lastPropName, currentValue);
-
-                //if (finalResult.IsFailed)
-                //{
-                //    return Result.Fail(finalResult.Errors);
-                //}
-
-                //if (finalResult.Value != null && finalResult.Value.Any())
-                //{
-                //    foreach (var item in finalResult.Value)
-                //    {
-                //        selectResult.Add(SelectPropertyResult.FromValue(item));
-                //    }
-                //}
             }
 
 
@@ -326,7 +202,7 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
         // assemble all collected items to SelectPropertyResult list
         foreach (var item in currentValues)
         {
-            var property = item.GetType().GetProperty(lastPropName);
+            var property = item?.GetType().GetProperty(lastPropName);
 
             if (property == null)
             {
@@ -357,52 +233,7 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
             {
                 resultList.AddRange(collectionItems.Value);
             }
-            /*
-            var cleanPropName = propName.EndsWith("[]") ?
-                propName.Substring(0, propName.Length - 2) :
-                propName.Substring(0, propName.Length - 3);
-
-            var prop = currentValue.GetType().GetProperty(cleanPropName);
-
-            if (prop == null)
-            {
-                return Result.Fail($"Path '{modelBinding}': property '{cleanPropName}' not found");
-            }
-
-            var list = prop?.GetValue(currentValue);
-
-            if (list == null)
-            {
-                // extracted from model collection is null, continue iteration
-                return Result.Ok();
-            }
-
-            var dictObj = list as IDictionary;
-            var listObj = list as IList;
-
-            if (dictObj != null)
-            {
-                foreach (var item in dictObj.Values)
-                {
-                    resultList.Add(item);
-                }
-            }
-            else if (listObj != null)
-            {
-                foreach (var item in listObj)
-                {
-                    resultList.Add(item);
-                }
-            }
-            else
-            {
-                // error
-                return Result.Fail($"Path '{modelBinding}': only IDictionary or IList properties are supported");
-            }
-            */
-
-            //return Result.Ok(resultList);
-        }
+         }
         // [xyz] case
         else if (propName.Contains('[') && propName.Contains(']'))
         {
@@ -417,70 +248,10 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
             {
                 resultList.Add(collectionItem.Value);
             }
-            /*
-            var propSplit = propName.Split('[');
-            var dictPropName = propSplit[0];
-            var dictKey = propSplit[1].Split(']')[0];
-            dictKey = dictKey.Replace("'", "").Replace("\"", "");
-
-            var prop = currentValue.GetType().GetProperty(dictPropName);
-
-            if (prop == null)
-            {
-                return Result.Fail($"Path '{modelBinding}': property '{dictPropName}' not found");
-            }
-
-            var dict = prop?.GetValue(currentValue);
-
-            if (dict == null)
-            {
-                // extracted from model collection is null, continue iteration
-                return Result.Ok();
-            }
-
-            var dictObj = dict as IDictionary;
-            var listObj = dict as IList;
-
-            if (dictObj != null)
-            {
-                if (!dictObj.Contains(dictKey))
-                {
-                    // error
-                    return Result.Fail($"Path '{modelBinding}': IDictionary key '{dictKey}' not found");
-                }
-
-                resultList.Add(dictObj[dictKey]);
-                //return Result.Ok();
-            }
-            else if (listObj != null)
-            {
-                if (!int.TryParse(dictKey, out var listIdx))
-                {
-                    // error
-                    return Result.Fail($"Path '{modelBinding}': IList index '{dictKey}' is not int");
-                }
-
-                if (listIdx >= listObj.Count)
-                {
-                    // error
-                    return Result.Fail($"Path '{modelBinding}': IList index {dictKey} is out of range");
-                }
-
-                resultList.Add(listObj[listIdx]);
-                //return Result.Ok(listObj[listIdx]);
-            }
-            else
-            {
-                // error
-                return Result.Fail($"Path '{modelBinding}': only IDictionary or IList properties are supported");
-            }
-
-            //return Result.Ok(resultList);
-            */
         }
         else
         {
-            var prop = currentValue.GetType().GetProperty(propName);
+            var prop = currentValue?.GetType().GetProperty(propName);
 
             if (prop == null)
             {
@@ -502,7 +273,7 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
                 propName.Substring(0, propName.Length - 2) :
                 propName.Substring(0, propName.Length - 3);
 
-        var prop = currentValue.GetType().GetProperty(cleanPropName);
+        var prop = currentValue?.GetType().GetProperty(cleanPropName);
 
         if (prop == null)
         {
@@ -550,7 +321,7 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
         var dictKey = propSplit[1].Split(']')[0];
         dictKey = dictKey.Replace("'", "").Replace("\"", "");
 
-        var prop = currentValue.GetType().GetProperty(dictPropName);
+        var prop = currentValue?.GetType().GetProperty(dictPropName);
 
         if (prop == null)
         {
@@ -576,7 +347,6 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
                 return Result.Fail($"Path '{modelBinding}': IDictionary key '{dictKey}' not found");
             }
 
-            //resultList.Add(dictObj[dictKey]);
             return dictObj[dictKey];
         }
         else if (listObj != null)
@@ -593,7 +363,6 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
                 return Result.Fail($"Path '{modelBinding}': IList index {dictKey} is out of range");
             }
 
-            //resultList.Add(listObj[listIdx]);
             return listObj[listIdx];
         }
         else
@@ -604,7 +373,7 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
     }
 }
 
-public record SelectPropertyResult(object Target, PropertyInfo Property)
+public record SelectPropertyResult(object? Target, PropertyInfo? Property)
 {
     public object? Value { get; private set; }
 
