@@ -72,6 +72,29 @@ public class SetValueTests
         Assert.Equal("Path '$.Nested[*].Id': expected one value but 2 value(s) found", result.Errors.Single().Message);
     }
 
+    [Fact(Skip = "This is may be a useful case to replace a collection")]
+    public void SetValue_ShouldReturnError_WhenCollectionIsReplaced()
+    {
+        var model = new SampleModel
+        {
+            Id = "7",
+            Name = "Gerry",
+            Nested = new([new SampleNested { Id = "xyz", Name = "Pedro" }])
+        };
+
+        var navi = new JsonPathModelNavigator();
+
+        var result = navi.SetValue(model, "$.Nested[*]", model.Nested);
+        Assert.NotNull(result);
+        Assert.True(result.IsFailed);
+        Assert.Equal("Path '$.Nested[*]': SetValue replacing a collection is not supported", result.Errors.Single().Message);
+
+        result = navi.SetValue(model, "$.Nested[]", model.Nested);
+        Assert.NotNull(result);
+        Assert.True(result.IsFailed);
+        Assert.Equal("Path '$.Nested[]': SetValue replacing a collection is not supported", result.Errors.Single().Message);
+    }
+
     [Fact]
     public void SetValue_ShouldSetValue_ToExpandoObject()
     {

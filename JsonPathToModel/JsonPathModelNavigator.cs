@@ -98,6 +98,11 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
         var targetObject = result.Target;
         var property = result.Property;
 
+        if (property == null && result.Value != null)
+        {
+            return Result.Fail($"Path '{modelBinding}': SetValue replacing a collection is not supported");
+        }
+
         if (property == null || targetObject == null || property.SetMethod == null)
         {
             return Result.Fail($"Path '{modelBinding}': property not found or SetMethod is null");
@@ -147,7 +152,18 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
             foreach (var currentValue in currentValues)
             {
                 // all values from list or dictionary
-                if (propName.EndsWith("[*]"))
+                var currentResult = GetPropertyValues(modelBinding, propName, currentValue);
+
+                if (currentResult.IsFailed)
+                {
+                    return Result.Fail(currentResult.Errors);
+                }
+
+                if (currentResult.Value != null && currentResult.Value.Any())
+                {
+                    iterationValues.AddRange(currentResult.Value);
+                }
+                /*if (propName.EndsWith("[*]"))
                 {
                     var cleanPropName = propName.Substring(0, propName.Length - 3);
                     var prop = currentValue.GetType().GetProperty(cleanPropName);
@@ -256,18 +272,58 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
 
                     var item = prop?.GetValue(currentValue);
                     iterationValues.Add(item);
-                }
+                }*/
             }
 
             currentValues = iterationValues;
         }
 
+        // collect final result
         if (lastPropName.EndsWith("[*]"))
         {
             lastPropName = lastPropName.Substring(0, lastPropName.Length - 3);
         }
+        else if (lastPropName.EndsWith("[]"))
+        {
+            lastPropName = lastPropName.Substring(0, lastPropName.Length - 2);
+        }
+        // for [xyz] case
+        else if (lastPropName.Contains('[') && lastPropName.Contains(']'))
+        {
+            foreach (var currentValue in currentValues)
+            {
+                var collectionItem = ExtractCollectionItem(modelBinding, lastPropName, currentValue);
 
-        // assemble all collected items to result
+                if (collectionItem.IsFailed)
+                {
+                    return Result.Fail(collectionItem.Errors);
+                }
+
+                if (collectionItem.Value != null)
+                {
+                    selectResult.Add(SelectPropertyResult.FromValue(collectionItem.Value));
+                }
+                //var finalResult = GetPropertyValues(modelBinding, lastPropName, currentValue);
+
+                //if (finalResult.IsFailed)
+                //{
+                //    return Result.Fail(finalResult.Errors);
+                //}
+
+                //if (finalResult.Value != null && finalResult.Value.Any())
+                //{
+                //    foreach (var item in finalResult.Value)
+                //    {
+                //        selectResult.Add(SelectPropertyResult.FromValue(item));
+                //    }
+                //}
+            }
+
+
+            return selectResult;
+        }
+
+        // assemble all collected items to SelectPropertyResult list
         foreach (var item in currentValues)
         {
             var property = item.GetType().GetProperty(lastPropName);
@@ -283,12 +339,287 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
 
         return selectResult;
     }
+
+    private static Result<List<object?>> GetPropertyValues(string modelBinding, string propName, object? currentValue)
+    {
+        var resultList = new List<object?>();
+
+        if (propName.EndsWith("[*]") || propName.EndsWith("[]"))
+        {
+            var collectionItems = ExtractAllCollectionItems(modelBinding, propName, currentValue);
+
+            if (collectionItems.IsFailed)
+            {
+                return Result.Fail(collectionItems.Errors);
+            }
+
+            if (collectionItems.Value != null)
+            {
+                resultList.AddRange(collectionItems.Value);
+            }
+            /*
+            var cleanPropName = propName.EndsWith("[]") ?
+                propName.Substring(0, propName.Length - 2) :
+                propName.Substring(0, propName.Length - 3);
+
+            var prop = currentValue.GetType().GetProperty(cleanPropName);
+
+            if (prop == null)
+            {
+                return Result.Fail($"Path '{modelBinding}': property '{cleanPropName}' not found");
+            }
+
+            var list = prop?.GetValue(currentValue);
+
+            if (list == null)
+            {
+                // extracted from model collection is null, continue iteration
+                return Result.Ok();
+            }
+
+            var dictObj = list as IDictionary;
+            var listObj = list as IList;
+
+            if (dictObj != null)
+            {
+                foreach (var item in dictObj.Values)
+                {
+                    resultList.Add(item);
+                }
+            }
+            else if (listObj != null)
+            {
+                foreach (var item in listObj)
+                {
+                    resultList.Add(item);
+                }
+            }
+            else
+            {
+                // error
+                return Result.Fail($"Path '{modelBinding}': only IDictionary or IList properties are supported");
+            }
+            */
+
+            //return Result.Ok(resultList);
+        }
+        // [xyz] case
+        else if (propName.Contains('[') && propName.Contains(']'))
+        {
+            var collectionItem = ExtractCollectionItem(modelBinding, propName, currentValue);
+
+            if (collectionItem.IsFailed)
+            {
+                return Result.Fail(collectionItem.Errors);
+            }
+
+            if (collectionItem.Value != null)
+            {
+                resultList.Add(collectionItem.Value);
+            }
+            /*
+            var propSplit = propName.Split('[');
+            var dictPropName = propSplit[0];
+            var dictKey = propSplit[1].Split(']')[0];
+            dictKey = dictKey.Replace("'", "").Replace("\"", "");
+
+            var prop = currentValue.GetType().GetProperty(dictPropName);
+
+            if (prop == null)
+            {
+                return Result.Fail($"Path '{modelBinding}': property '{dictPropName}' not found");
+            }
+
+            var dict = prop?.GetValue(currentValue);
+
+            if (dict == null)
+            {
+                // extracted from model collection is null, continue iteration
+                return Result.Ok();
+            }
+
+            var dictObj = dict as IDictionary;
+            var listObj = dict as IList;
+
+            if (dictObj != null)
+            {
+                if (!dictObj.Contains(dictKey))
+                {
+                    // error
+                    return Result.Fail($"Path '{modelBinding}': IDictionary key '{dictKey}' not found");
+                }
+
+                resultList.Add(dictObj[dictKey]);
+                //return Result.Ok();
+            }
+            else if (listObj != null)
+            {
+                if (!int.TryParse(dictKey, out var listIdx))
+                {
+                    // error
+                    return Result.Fail($"Path '{modelBinding}': IList index '{dictKey}' is not int");
+                }
+
+                if (listIdx >= listObj.Count)
+                {
+                    // error
+                    return Result.Fail($"Path '{modelBinding}': IList index {dictKey} is out of range");
+                }
+
+                resultList.Add(listObj[listIdx]);
+                //return Result.Ok(listObj[listIdx]);
+            }
+            else
+            {
+                // error
+                return Result.Fail($"Path '{modelBinding}': only IDictionary or IList properties are supported");
+            }
+
+            //return Result.Ok(resultList);
+            */
+        }
+        else
+        {
+            var prop = currentValue.GetType().GetProperty(propName);
+
+            if (prop == null)
+            {
+                return Result.Fail($"Path '{modelBinding}': property '{propName}' not found");
+            }
+
+            var item = prop?.GetValue(currentValue);
+            resultList.Add(item);
+        }
+
+        return Result.Ok(resultList);
+    }
+
+    private static Result<List<object?>> ExtractAllCollectionItems(string modelBinding, string propName, object? currentValue)
+    {
+        var resultList = new List<object?>();
+
+        var cleanPropName = propName.EndsWith("[]") ?
+                propName.Substring(0, propName.Length - 2) :
+                propName.Substring(0, propName.Length - 3);
+
+        var prop = currentValue.GetType().GetProperty(cleanPropName);
+
+        if (prop == null)
+        {
+            return Result.Fail($"Path '{modelBinding}': property '{cleanPropName}' not found");
+        }
+
+        var list = prop?.GetValue(currentValue);
+
+        if (list == null)
+        {
+            // extracted from model collection is null, continue iteration
+            return Result.Ok();
+        }
+
+        var dictObj = list as IDictionary;
+        var listObj = list as IList;
+
+        if (dictObj != null)
+        {
+            foreach (var item in dictObj.Values)
+            {
+                resultList.Add(item);
+            }
+        }
+        else if (listObj != null)
+        {
+            foreach (var item in listObj)
+            {
+                resultList.Add(item);
+            }
+        }
+        else
+        {
+            // error
+            return Result.Fail($"Path '{modelBinding}': only IDictionary or IList properties are supported");
+        }
+
+        return resultList;
+    }
+
+    private static Result<object?> ExtractCollectionItem(string modelBinding, string propName, object? currentValue)
+    {
+        var propSplit = propName.Split('[');
+        var dictPropName = propSplit[0];
+        var dictKey = propSplit[1].Split(']')[0];
+        dictKey = dictKey.Replace("'", "").Replace("\"", "");
+
+        var prop = currentValue.GetType().GetProperty(dictPropName);
+
+        if (prop == null)
+        {
+            return Result.Fail($"Path '{modelBinding}': property '{dictPropName}' not found");
+        }
+
+        var dict = prop?.GetValue(currentValue);
+
+        if (dict == null)
+        {
+            // extracted from model collection is null, continue iteration
+            return Result.Ok();
+        }
+
+        var dictObj = dict as IDictionary;
+        var listObj = dict as IList;
+
+        if (dictObj != null)
+        {
+            if (!dictObj.Contains(dictKey))
+            {
+                // error
+                return Result.Fail($"Path '{modelBinding}': IDictionary key '{dictKey}' not found");
+            }
+
+            //resultList.Add(dictObj[dictKey]);
+            return dictObj[dictKey];
+        }
+        else if (listObj != null)
+        {
+            if (!int.TryParse(dictKey, out var listIdx))
+            {
+                // error
+                return Result.Fail($"Path '{modelBinding}': IList index '{dictKey}' is not int");
+            }
+
+            if (listIdx >= listObj.Count)
+            {
+                // error
+                return Result.Fail($"Path '{modelBinding}': IList index {dictKey} is out of range");
+            }
+
+            //resultList.Add(listObj[listIdx]);
+            return listObj[listIdx];
+        }
+        else
+        {
+            // error
+            return Result.Fail($"Path '{modelBinding}': only IDictionary or IList properties are supported");
+        }
+    }
 }
 
 public record SelectPropertyResult(object Target, PropertyInfo Property)
 {
+    public object? Value { get; private set; }
+
+    public static SelectPropertyResult FromValue(object value)
+    {
+        return new SelectPropertyResult(null, null) { Value = value };
+    }
+
     public object? Resolve()
     {
+        if (Value != null)
+        { 
+            return Value;
+        }
+
         if (Property == null || Target == null)
         {
             return Target;
