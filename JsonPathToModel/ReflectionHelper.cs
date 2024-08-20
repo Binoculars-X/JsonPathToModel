@@ -34,13 +34,13 @@ public static class ReflectionHelper
                     var path = $"{current.Path}.{prop.Name}[*]";
                     var type = prop.PropertyType.GetElementType();
 
-                    if (type.IsPrimitive())
+                    if (type?.IsPrimitive() == true)
                     {
                         result.Add(path);
                     }
                     else
                     {
-                        currentProperties.Add(new Context(path, type));
+                        currentProperties.Add(new Context(path, type!));
                     }
                 }
                 else if (typeof(IList).IsAssignableFrom(prop.PropertyType))
