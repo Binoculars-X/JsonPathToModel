@@ -5,10 +5,11 @@ VisualStudioVersion = 17.10.35027.167
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JsonPathToModel", "JsonPathToModel\JsonPathToModel.csproj", "{7A8E6444-83F4-42DC-B230-23326B0B628E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JsonPathToModel.Tests", "tests\JsonPathToModel.TEsts\JsonPathToModel.Tests.csproj", "{F8349435-72F1-4343-9427-88382948CA81}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JsonPathToModel.Tests", "tests\JsonPathToModel.Tests\JsonPathToModel.Tests.csproj", "{F8349435-72F1-4343-9427-88382948CA81}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{34179A2C-2F0D-4DF0-92A9-F66039D6EC48}"
 	ProjectSection(SolutionItems) = preProject
+		.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
 		README.md = README.md
 		readme.txt = readme.txt
 	EndProjectSection
