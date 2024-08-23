@@ -79,7 +79,7 @@ public class SampleClientModelTests
             e => Assert.Equal(model.Roles[2].Name, e as string));
     }
 
-    private SampleClientModel GenerateSampleClient(string id = "1")
+    public static SampleClientModel GenerateSampleClient(string id = "1")
     {
         var client = new Fixture()
             .Build<SampleClientModel>()

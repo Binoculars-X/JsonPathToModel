@@ -23,4 +23,9 @@ public static class ReflectionExtensions
 
         return result;
     }
+
+    public static bool IsBoxable(this Type t)
+    {
+        return t.IsPrimitive || t == typeof(decimal) || t == typeof(DateTime) || t == typeof(DateTime?) || Nullable.GetUnderlyingType(t) != null;
+    }
 }

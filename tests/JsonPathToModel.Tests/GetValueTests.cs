@@ -1,6 +1,7 @@
 using JsonPathToModel.Tests.ModelData;
 using System.Collections;
 using System.IO;
+using System.Xml.Linq;
 
 namespace JsonPathToModel.Tests;
 
@@ -179,7 +180,33 @@ public class GetValueTests
 
         var path = "$.NestedDictionary[wrong].Id";
         var result = navi.GetValue(model, path);
-        Assert.False(result.IsFailed);
+        Assert.True(result.IsSuccess);
         Assert.Null(result.Value);
+    }
+
+    [Fact]
+    public void CallSiteGetValue_Should_Return()
+    {
+        var model = new SampleModel
+        {
+            Id = "7",
+            Name = "Gerry",
+            Nested = new([new SampleNested { Id = "xyz", Name = "Pedro" }, new SampleNested { Id = "xzz", Name = "Antuan" }])
+        };
+
+        Assert.Equal("7", GetProperty(model, "Id"));
+        Assert.Equal("xyz", GetProperty(model, "Nested[0].Id"));
+    }
+
+    public static object GetProperty(object target, string name)
+    {
+        var site = System.Runtime.CompilerServices.CallSite<Func<System.Runtime.CompilerServices.CallSite, object, object>>
+            .Create(Microsoft.CSharp.RuntimeBinder.Binder.GetMember(0, 
+                name, 
+                target.GetType(), 
+                new[] { Microsoft.CSharp.RuntimeBinder.CSharpArgumentInfo.Create(0, null) }
+                ));
+        
+        return site.Target(site, target);
     }
 }
