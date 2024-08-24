@@ -26,14 +26,14 @@ public class JsonPathToModelBenchmarks
     // 77.8 ns for nested (cached)
     // 225 ns for nested (not cached)
     // 64 ns with nested cached emitter - segment emitters don't improve too much
-    [Benchmark]
-    public string JpathV2GetValue() => JsonPathToModelUsage.JpathV2GetValue();
+    //[Benchmark]
+    //public string JpathV2GetValue() => JsonPathToModelUsage.JpathV2GetValue();
 
     // Synthetic full code emitter of expression _model.Person.FirstName
     // 6.5 ns nested
     //[Benchmark]
     //public string GetJsonPathStraightEmitterGet() => JsonPathToModelUsage.GetJsonPathStraightEmitterGet();
 
-    //[Benchmark]
-    //public string JpathLatestGetValue() => JsonPathToModelUsage.JpathLatestGetValue();
+    [Benchmark]
+    public string JpathLatestGetValue() => JsonPathToModelUsage.JpathLatestGetValue();
 }

@@ -11,25 +11,28 @@ namespace JsonPathToModel.Tests.Parser;
 public class ExpressionEngineTests
 {
     [Fact]
-    public void Test1()
+    public void ExpressionEngine_ForNestedPath_Should_ReturnValue()
     {
-        var navi = new ExpressionEngine();
         var model = SampleClientModelTests.GenerateSampleClient();
         var expected = model.Person.FirstName;
 
-        var result = navi.GetValue(model, "$.Person.FirstName");
-        navi.GetValue(model, "$.Person.FirstName");
+        var result = new ExpressionEngine()
+            .ParseJsonPathExpression(model, "$.Person.FirstName")
+            .GetValue(model);
+
         Assert.Equal(expected, result);
     }
 
     [Fact]
-    public void NestedPath_StraightEmitter_Test1()
+    public void ExpressionEngine_ForNestedPath_StraightEmitter_Should_ReturnValue()
     {
         var model = SampleClientModelTests.GenerateSampleClient();
         var expected = model.Person.FirstName;
-        var func = ExpressionEngine.GetJsonPathStraightEmitterGet(model.GetType(), "$.Person.FirstName");
+        
+        var result = new ExpressionEngine(new NavigatorConfigOptions { OptimizeWithCodeEmitter = true })
+            .ParseJsonPathExpression(model, "$.Person.FirstName")
+            .GetValue(model);
 
-        var result = func.CreateDelegate()(model);
         Assert.Equal(expected, result);
     }
 }

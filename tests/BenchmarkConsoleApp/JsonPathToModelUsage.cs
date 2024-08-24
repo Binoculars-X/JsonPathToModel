@@ -21,16 +21,16 @@ public class JsonPathToModelUsage
     //static FastReflectionPrototype _fastReflection = new FastReflectionPrototype();
     static Func<object, object> _emitter;
 
-    static JsonPathToModelUsage()
-    {
-        _model = SampleClientModelTests.GenerateSampleClient();
-        _model.BusinessId = "Java";
-        _model.Person.FirstName = "Abba";
-        //_netsedEmitter = FastReflectionPrototype.GetNestedEmitter(_model, "$.Nested.Value").CreateDelegate();
+    //static JsonPathToModelUsage()
+    //{
+    //    _model = SampleClientModelTests.GenerateSampleClient();
+    //    _model.BusinessId = "Java";
+    //    _model.Person.FirstName = "Abba";
+    //    //_netsedEmitter = FastReflectionPrototype.GetNestedEmitter(_model, "$.Nested.Value").CreateDelegate();
 
-        var func = ExpressionEngine.GetJsonPathStraightEmitterGet(_model.GetType(), "$.Person.FirstName");
-        _emitter = func.CreateDelegate();
-    }
+    //    var func = ExpressionEngine.GetJsonPathStraightEmitterGet(_model.GetType(), "$.Person.FirstName");
+    //    _emitter = func.CreateDelegate();
+    //}
 
     public static string DotNetCodeGetValue()
     {
@@ -50,11 +50,11 @@ public class JsonPathToModelUsage
         return _navi.GetValue(_model, "$.Person.FirstName").ToString();
     }
 
-    public static string JpathV2GetValue()
-    {
-        //return _exprEng.GetValue(_model, "$.BusinessId").ToString();
-        return _exprEng.GetValue(_model, "$.Person.FirstName").ToString();
-    }
+    //public static string JpathV2GetValue()
+    //{
+    //    //return _exprEng.GetValue(_model, "$.BusinessId").ToString();
+    //    return _exprEng.GetValue(_model, "$.Person.FirstName").ToString();
+    //}
 
     static Dictionary<Type, Func<object, object>> _dummy = [];
 

@@ -38,11 +38,11 @@ public class GetValueTests
         };
 
         var navi = new JsonPathModelNavigator();
-        Assert.Equal("Pedro", navi.GetValue(model, "$.NestedDictionary[key1].Name").Value);
-        Assert.Equal("xyz", navi.GetValue(model, "$.NestedDictionary[key1].Id").Value);
+        Assert.Equal("Pedro", navi.GetValue(model, "$.NestedDictionary['key1'].Name").Value);
+        Assert.Equal("xyz", navi.GetValue(model, "$.NestedDictionary['key1'].Id").Value);
 
         model.NestedDictionary = null;
-        var result = navi.GetValue(model, "$.NestedDictionary[key1].Id");
+        var result = navi.GetValue(model, "$.NestedDictionary['key1'].Id");
         Assert.True(result.IsSuccess);
         Assert.Null(result.Value);
     }
@@ -138,12 +138,12 @@ public class GetValueTests
 
         var navi = new JsonPathModelNavigator();
 
-        var path = "$.NestedDictionary[key1].Id";
+        var path = "$.NestedDictionary['key1'].Id";
         var result = navi.GetValue(model, path);
         Assert.False(result.IsFailed);
         Assert.Equal("xyz", result.Value);
 
-        path = "$.NestedDictionary[key1].Name";
+        path = "$.NestedDictionary['key1'].Name";
         result = navi.GetValue(model, path);
         Assert.False(result.IsFailed);
         Assert.Equal("Pedro", result.Value);
@@ -178,7 +178,7 @@ public class GetValueTests
 
         var navi = new JsonPathModelNavigator();
 
-        var path = "$.NestedDictionary[wrong].Id";
+        var path = "$.NestedDictionary['wrong'].Id";
         var result = navi.GetValue(model, path);
         Assert.True(result.IsSuccess);
         Assert.Null(result.Value);

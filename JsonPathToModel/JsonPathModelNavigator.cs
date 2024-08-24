@@ -7,22 +7,24 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using FluentResults;
+using JsonPathToModel.Parser;
 
 namespace JsonPathToModel;
 
 public class JsonPathModelNavigator : IJsonPathModelNavigator
 {
     internal readonly NavigatorConfigOptions _options;
+    private readonly ExpressionEngine _expressionEngine;
 
-    public JsonPathModelNavigator()
+    public JsonPathModelNavigator() : this(new NavigatorConfigOptions())
     {
-        _options = new NavigatorConfigOptions();
     }
+
     public JsonPathModelNavigator(NavigatorConfigOptions options)
     {
         _options = options;
+        _expressionEngine = new ExpressionEngine(options);
     }
-
 
     public Result<IEnumerable<object>> GetItems(object model, string itemsBinding)
     {
@@ -60,31 +62,48 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
         return result;
     }
 
-    public Result<object?> GetValue(object model, string modelBinding)
+
+
+    public Result<object?> GetValue(object model, string path)
     {
-        if (modelBinding == "")
+        if (path == "" || path == "$")
         {
             return model;
         }
 
-        var selectResult = SelectLastPropertiesIterateThroughPath(model, modelBinding);
-
-        if (selectResult.IsFailed)
+        try
         {
-            return Result.Fail(selectResult.Errors);
+            var result = _expressionEngine.ParseJsonPathExpression(model, path);
+            var value = result.GetValue(model);
+            return value;
+        }
+        catch (ParserException pex)
+        {
+            return Result.Fail($"Path '{path}': {pex.Message}");
+        }
+        catch (Exception e)
+        {
+            throw;
         }
 
-        if (selectResult.Value == null || !selectResult.Value.Any())
-        {
-            return Result.Ok((object?)null);
-        }
+        //var selectResult = SelectLastPropertiesIterateThroughPath(model, modelBinding);
 
-        if (selectResult.Value.Count == 1)
-        {
-            return selectResult.Value.Single().Resolve();
-        }
+        //if (selectResult.IsFailed)
+        //{
+        //    return Result.Fail(selectResult.Errors);
+        //}
 
-        return Result.Fail($"Path '{modelBinding}': expected one value but {selectResult.Value.Count} value(s) found");
+        //if (selectResult.Value == null || !selectResult.Value.Any())
+        //{
+        //    return Result.Ok((object?)null);
+        //}
+
+        //if (selectResult.Value.Count == 1)
+        //{
+        //    return selectResult.Value.Single().Resolve();
+        //}
+
+        //return Result.Fail($"Path '{path}': expected one value but {selectResult.Value.Count} value(s) found");
     }
 
     public Result SetValue(object model, string modelBinding, object val)
@@ -407,5 +426,37 @@ public record SelectPropertyResult(object? Target, PropertyInfo? Property)
         }
 
         return Property.GetValue(Target);
+    }
+}
+
+public static class ExpressionResultExtensions
+{
+    public static object GetValue(this ExpressionResult result, object target)
+    {
+        // 1. If delegate provided
+        if (result.FastDelegate != null)
+        {
+            return result.FastDelegate(target);
+        }
+
+        // 2. Iterate through tokens resolving value
+        var currentObject = target;
+
+        for (int i = 1; i < result.Tokens.Count; i++)
+        {
+            currentObject = Resolve(currentObject, result.Tokens[i]);
+        }
+
+        return currentObject;
+    }
+
+    private static object? Resolve(object currentObject, TokenInfo token)
+    {
+        if (token.Collection != null)
+        {
+            throw new NotImplementedException("Collections not implemented");
+        }
+        var prop = currentObject.GetType().GetProperty(token.Field);
+        return prop?.GetValue(currentObject);
     }
 }

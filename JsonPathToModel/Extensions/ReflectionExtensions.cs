@@ -19,13 +19,15 @@ public static class ReflectionExtensions
         var t = type;
 
         var result = t.IsPrimitive || t == typeof(decimal) || t == typeof(decimal?) || t == typeof(string) || t == typeof(DateTime)
-            || t == typeof(DateTime?) || t == typeof(byte[]);
+            || t == typeof(DateTime?) || t == typeof(DateOnly) || t == typeof(DateOnly?) || t == typeof(byte[]);
 
         return result;
     }
 
     public static bool IsBoxable(this Type t)
     {
-        return t.IsPrimitive || t == typeof(decimal) || t == typeof(DateTime) || t == typeof(DateTime?) || Nullable.GetUnderlyingType(t) != null;
+        return t.IsPrimitive || t == typeof(decimal) || t == typeof(DateTime) || t == typeof(DateTime?)
+            || t == typeof(DateOnly) || t == typeof(DateOnly?)
+            || Nullable.GetUnderlyingType(t) != null;
     }
 }

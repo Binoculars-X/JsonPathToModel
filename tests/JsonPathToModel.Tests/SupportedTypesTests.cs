@@ -91,7 +91,6 @@ public class SupportedTypesTests
             Assert.Equal(data.Nested.DateOnlyNullable, navi.GetValue(data, "$.Nested.DateOnlyNullable").Value);
         };
 
-
         // use reflection
         var svc = ConfigHelper.GetConfigurationServices();
         var navi = svc.GetService<IJsonPathModelNavigator>();

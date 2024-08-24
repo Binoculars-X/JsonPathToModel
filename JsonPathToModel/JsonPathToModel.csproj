@@ -20,6 +20,7 @@
   <ItemGroup>
     <PackageReference Include="FluentResults" Version="3.16.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageReference Include="Portable.System.DateTimeOnly" Version="8.0.1" />
     <PackageReference Include="Sigil" Version="5.0.0" />
     <PackageReference Include="System.Text.Json" Version="8.0.4" />
   </ItemGroup>
