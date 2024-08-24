@@ -23,8 +23,13 @@ public class SampleModelAllTypesNested
     public string? StringNullable { get; set; }
     public DateTime DateTime { get; set; }
     public DateTime? DateTimeNullable { get; set; }
+    // DateOnly - not supported by AutoFixture
+    //public DateOnly DateOnly { get; set; }
+    //public DateOnly? DateOnlyNullable { get; set; }
     public decimal Decimal { get; set; }
     public decimal? DecimalNullable { get; set; }
     public double Double { get; set; }
     public double? DoubleNullable { get; set; }
+    public byte[] Bytes { get; set; }
+    public byte[]? BytesNullable { get; set; }
 }
