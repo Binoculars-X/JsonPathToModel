@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using JsonPathToModel.Tests;
 using JsonPathToModel.Parser;
 using Sigil;
+using JsonPathToModel.Tests.Examples;
 
 namespace BenchmarkConsoleApp;
 
@@ -36,6 +36,12 @@ public class JsonPathToModelUsage
     {
         //return _model.BusinessId;
         return _model.Person.FirstName;
+    }
+    
+    public static string JpathLatestGetValue()
+    {
+        //return _navi.GetValue(_model, "$.BusinessId").ToString();
+        return _navi.GetValue(_model, "$.Person.FirstName").ToString();
     }
     
     public static string JpathV1GetValue()

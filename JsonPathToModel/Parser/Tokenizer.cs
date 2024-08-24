@@ -38,7 +38,10 @@ public class Tokenizer
         get { return _currentToken; }
     }
 
-    public record CollectionDef(int? Index, string? Literal);
+    public record CollectionDef(int? Index, string? Literal)
+    {
+        public bool SelectAll { get { return Index == null && string.IsNullOrEmpty(Literal); } }
+    }
 
     public TokenInfo Info
     {
@@ -214,6 +217,18 @@ public class Tokenizer
 
         index = ReadIntNumber();
         literal = ReadStringLiteral();
+
+        // Asterisk means all elements
+        if (_currentChar == '*')
+        {
+            if (literal != null && literal != "")
+            {
+                throw new ParserException($"Illigal symbol '{_currentChar}' used with string literal, ']' is expected");
+            }
+
+            literal = "";
+            NextChar();
+        }
 
         if (_currentChar == ']')
         {

@@ -12,6 +12,18 @@ namespace JsonPathToModel;
 
 public class JsonPathModelNavigator : IJsonPathModelNavigator
 {
+    internal readonly NavigatorConfigOptions _options;
+
+    public JsonPathModelNavigator()
+    {
+        _options = new NavigatorConfigOptions();
+    }
+    public JsonPathModelNavigator(NavigatorConfigOptions options)
+    {
+        _options = options;
+    }
+
+
     public Result<IEnumerable<object>> GetItems(object model, string itemsBinding)
     {
         var result = GetValue(model, itemsBinding) as IEnumerable<object>;

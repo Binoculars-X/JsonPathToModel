@@ -6,12 +6,14 @@ using System.Text;
 
 namespace JsonPathToModel.Parser;
 
+public record ExpressionResult(List<TokenInfo> Tokens, Func<object, object>? FastDelegate)
+{
+    public readonly bool ContainsCollections = Tokens.Any(t => t.Collection != null);
+};
+
 public class ExpressionEngine
 {
-    private readonly Dictionary<Type, Dictionary<string, Func<object, object>>> _delegateNestedCache = [];
-    private readonly Dictionary<PropertyInfo, Func<object, object>> _delegatePropertiesCache = [];
-    private readonly Dictionary<string, List<TokenInfo>> _expressionCache = [];
-    //private static readonly Dictionary<string, Func<object, object>> _delegateCache = [];
+    private readonly Dictionary<Type, Dictionary<string, ExpressionResult>> _expressionCache = [];
 
     public ExpressionEngine()
     {
@@ -20,49 +22,22 @@ public class ExpressionEngine
     public object GetValue(object target, string path)
     {
         // 1. read all tokens and build initial tree
-        var tokenList = ParseExpression(path);
+        var exprResult = ParseExpression(target.GetType(), path);
 
         // 2. Iterate through tokens resolving value
         var currentObject = target;
 
-        for (int i = 1; i < tokenList.Count; i++)
+        for (int i = 1; i < exprResult.Tokens.Count; i++)
         {
             //var prop = currentObject.GetType().GetProperty(tokenList[i].Field);
             //currentObject = prop?.GetValue(currentObject);
-            currentObject = Resolve(currentObject, tokenList[i]);
+            currentObject = Resolve(currentObject, exprResult.Tokens[i]);
         }
 
         return currentObject;
     }
 
-    public object GetValueNestedDictionary(object model, string property)
-    {
-        var modelType = model.GetType();
-        Dictionary<string, Func<object, object>> properties;
-        Func<object, object> emitter;
 
-        if (!_delegateNestedCache.TryGetValue(modelType, out properties))
-        {
-            properties = new Dictionary<string, Func<object, object>>();
-            _delegateNestedCache[modelType] = properties;
-        }
-
-        if (!properties.TryGetValue(property, out emitter))
-        {
-            var propertyInfo = model.GetType().GetProperty(property);
-
-            if (propertyInfo == null)
-            {
-                return null;
-            }
-
-            emitter = GetPropertyEmitter(modelType, property, propertyInfo).CreateDelegate();
-            properties[property] = emitter;
-        }
-
-        var value = emitter(model);
-        return value;
-    }
 
     public static Emit<Func<object, object>> GetJsonPathStraightEmitterGet(Type modelType, string binding)
     {
@@ -104,29 +79,6 @@ public class ExpressionEngine
         return result;
     }
 
-    /*
-    public object GetValuePropertyDictionary(object model, string property)
-    {
-        var modelType = model.GetType();
-        Func<object, object> emitter;
-        var propertyInfo = modelType.GetProperty(property);
-
-        if (propertyInfo == null)
-        {
-            return null;
-        }
-
-        if (!_delegatePropertiesCache.TryGetValue(propertyInfo, out emitter))
-        {
-            emitter = GetPropertyEmitter(modelType, property, propertyInfo).CreateDelegate();
-            _delegatePropertiesCache[propertyInfo] = emitter;
-        }
-
-        var value = emitter(model);
-        return value;
-    }
-    */
-
     private static Emit<Func<object, object>> GetPropertyEmitter(Type modelType, string property, PropertyInfo propertyInfo)
     {
         var result = Emit<Func<object, object>>
@@ -144,10 +96,6 @@ public class ExpressionEngine
 
         return result;
     }
-    private object? ResolveV3(object currentObject, TokenInfo token)
-    {
-        return GetValueNestedDictionary(currentObject, token.Field);
-    }
 
     private object? Resolve(object currentObject, TokenInfo token)
     {
@@ -155,13 +103,32 @@ public class ExpressionEngine
         return prop?.GetValue(currentObject);
     }
 
-    private List<TokenInfo> ParseExpression(string text)
+    private ExpressionResult ParseExpression(Type type, string text)
     {
-        if (_expressionCache.ContainsKey(text))
-        {
-            return _expressionCache[text];
+        Dictionary<string, ExpressionResult> typeDicitonary;
+        ExpressionResult cachedTokenInfo;
+
+        if (_expressionCache.TryGetValue(type, out typeDicitonary))
+        { 
+            if (typeDicitonary.TryGetValue(text, out cachedTokenInfo))
+            {  
+                return cachedTokenInfo;
+            }
         }
         else
+        {
+            _expressionCache[type] = [];
+        }
+
+        //if (_expressionCache.ContainsKey(type) && _expressionCache[type].ContainsKey(text))
+        //{
+        //    return _expressionCache[type][text];
+        //}
+        //if (_expressionCache.ContainsKey(text))
+        //{
+        //    return _expressionCache[text];
+        //}
+        //else
         {
             var tokenList = new List<TokenInfo>();
 
@@ -183,34 +150,10 @@ public class ExpressionEngine
                 }
             }
 
-            _expressionCache[text] = tokenList;
-            return tokenList;
+            var result = new ExpressionResult(tokenList, null);
+            _expressionCache[type][text] = result;
+            //_expressionCache[text] = tokenList;
+            return result;
         }
     }
 }
-
-public class Expr
-{ }
-
-//class ObjectResolver : IObjectResolver
-//{
-//    public string[] GetOperators()
-//    {
-//        throw new NotImplementedException();
-//    }
-
-//    public Dictionary<int, string[]> GetPriorityOperators()
-//    {
-//        throw new NotImplementedException();
-//    }
-
-//    public string[] GetQueryFields()
-//    {
-//        throw new NotImplementedException();
-//    }
-
-//    public string[] GetQueryParams()
-//    {
-//        throw new NotImplementedException();
-//    }
-//}

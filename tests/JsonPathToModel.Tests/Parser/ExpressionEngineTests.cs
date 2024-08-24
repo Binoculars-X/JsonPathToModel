@@ -1,4 +1,5 @@
 ﻿using JsonPathToModel.Parser;
+using JsonPathToModel.Tests.Examples;
 using System;
 using System.Collections.Generic;
 using System.Linq;

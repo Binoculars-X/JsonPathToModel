@@ -1,10 +1,20 @@
 ﻿using AutoFixture;
 using JsonPathToModel.Tests.ModelData;
 
-namespace JsonPathToModel.Tests;
+namespace JsonPathToModel.Tests.Examples;
 
 public class SampleClientModelTests
 {
+    public static SampleClientModel GenerateSampleClient(string id = "1")
+    {
+        var client = new Fixture()
+            .Build<SampleClientModel>()
+            .With(p => p.Id, id)
+            .Create();
+
+        return client;
+    }
+
     [Fact]
     public void GetValue_ShouldReturn_ForLongPath()
     {
@@ -77,15 +87,5 @@ public class SampleClientModelTests
             e => Assert.Equal(model.Roles[0].Name, e as string),
             e => Assert.Equal(model.Roles[1].Name, e as string),
             e => Assert.Equal(model.Roles[2].Name, e as string));
-    }
-
-    public static SampleClientModel GenerateSampleClient(string id = "1")
-    {
-        var client = new Fixture()
-            .Build<SampleClientModel>()
-            .With(p => p.Id, id)
-            .Create();
-
-        return client;
     }
 }

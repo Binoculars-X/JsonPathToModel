@@ -8,10 +8,18 @@
 
   <PropertyGroup>
     <LangVersion>12.0</LangVersion>
+    <UserSecretsId>2efc9047-e001-4ec7-adee-f9a275e4e5b7</UserSecretsId>
   </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>JsonPathToModel.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
   
   <ItemGroup>
     <PackageReference Include="FluentResults" Version="3.16.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="Sigil" Version="5.0.0" />
     <PackageReference Include="System.Text.Json" Version="8.0.4" />
   </ItemGroup>
