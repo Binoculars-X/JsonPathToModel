@@ -22,7 +22,7 @@ public class SampleClientModelTests
         var model = GenerateSampleClient();
         var expected = model.Person.PrimaryContact.Email.Value;
 
-        var result = navi.GetValue(model, "$.Person.PrimaryContact.Email.Value");
+        var result = navi.GetValueResult(model, "$.Person.PrimaryContact.Email.Value");
         Assert.True(result.IsSuccess);
         Assert.Equal(expected, result.Value);
     }
@@ -34,19 +34,19 @@ public class SampleClientModelTests
         var model = GenerateSampleClient();
 
         // property notation
-        var result = navi.GetValue(model, "$.Roles");
+        var result = navi.GetValueResult(model, "$.Roles");
 
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Value as Role[]);
 
         // explicit array notation
-        result = navi.GetValue(model, "$.Roles[]");
+        result = navi.GetValueResult(model, "$.Roles[]");
 
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Value as Role[]);
 
         // explicit all items notation
-        result = navi.GetValue(model, "$.Roles[*]");
+        result = navi.GetValueResult(model, "$.Roles[*]");
 
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Value as Role[]);
@@ -57,7 +57,7 @@ public class SampleClientModelTests
     {
         var navi = new JsonPathModelNavigator();
         var model = GenerateSampleClient();
-        var result = navi.GetValue(model, "$.Roles[1]");
+        var result = navi.GetValueResult(model, "$.Roles[1]");
 
         Assert.True(result.IsSuccess);
         Assert.Equal(model.Roles[1], result.Value as Role);
@@ -68,7 +68,7 @@ public class SampleClientModelTests
     {
         var navi = new JsonPathModelNavigator();
         var model = GenerateSampleClient();
-        var result = navi.GetValue(model, "$.Roles[1].Name");
+        var result = navi.GetValueResult(model, "$.Roles[1].Name");
 
         Assert.True(result.IsSuccess);
         Assert.Equal(model.Roles[1].Name, result.Value as string);
@@ -79,7 +79,7 @@ public class SampleClientModelTests
     {
         var navi = new JsonPathModelNavigator();
         var model = GenerateSampleClient();
-        var result = navi.SelectValues(model, "$.Roles[*].Name");
+        var result = navi.SelectValuesResult(model, "$.Roles[*].Name");
 
         Assert.True(result.IsSuccess);
 

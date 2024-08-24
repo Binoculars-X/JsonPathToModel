@@ -26,9 +26,9 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
         _expressionEngine = new ExpressionEngine(options);
     }
 
-    public Result<IEnumerable<object>> GetItems(object model, string itemsBinding)
+    public Result<IEnumerable<object>> GetItemsResult(object model, string itemsBinding)
     {
-        var result = GetValue(model, itemsBinding) as IEnumerable<object>;
+        var result = GetValueResult(model, itemsBinding) as IEnumerable<object>;
 
         if (result != null)
         {
@@ -38,7 +38,7 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
         return Result.Fail("Not found");
     }
  
-    public Result<List<object?>> SelectValues(object model, string modelBinding)
+    public Result<List<object?>> SelectValuesResult(object model, string modelBinding)
     {
         if (modelBinding == "")
         {
@@ -63,19 +63,23 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
     }
 
 
-
-    public Result<object?> GetValue(object model, string path)
+    public object? GetValue(object model, string path)
     {
         if (path == "" || path == "$")
         {
             return model;
         }
 
+        var result = _expressionEngine.ParseJsonPathExpression(model, path);
+        var value = result.GetValue(model);
+        return value;
+    }
+
+    public Result<object?> GetValueResult(object model, string path)
+    {
         try
         {
-            var result = _expressionEngine.ParseJsonPathExpression(model, path);
-            var value = result.GetValue(model);
-            return value;
+            return GetValue(model, path);
         }
         catch (ParserException pex)
         {
@@ -107,7 +111,7 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
         //return Result.Fail($"Path '{path}': expected one value but {selectResult.Value.Count} value(s) found");
     }
 
-    public Result SetValue(object model, string modelBinding, object val)
+    public Result SetValueResult(object model, string modelBinding, object val)
     {
         var selectResult = SelectLastPropertiesIterateThroughPath(model, modelBinding);
 
@@ -400,7 +404,7 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
         else
         {
             // error
-            return Result.Fail($"Path '{modelBinding}': only IDictionary or IList properties are supported");
+            return Result.Fail($"Path '{modelBinding}': only IDictionary or IList collections are supported");
         }
     }
 }
@@ -427,74 +431,5 @@ public record SelectPropertyResult(object? Target, PropertyInfo? Property)
         }
 
         return Property.GetValue(Target);
-    }
-}
-
-public static class ExpressionResultExtensions
-{
-    public static object? GetValue(this ExpressionResult result, object target)
-    {
-        // 1. If delegate provided
-        if (result.FastDelegate != null)
-        {
-            return result.FastDelegate(target);
-        }
-
-        // 2. Iterate through tokens resolving value
-        var currentObject = target;
-
-        for (int i = 1; i < result.Tokens.Count; i++)
-        {
-            currentObject = Resolve(currentObject, result.Tokens[i]);
-
-            if (currentObject == null)
-            {
-                return null;
-            }
-        }
-
-        return currentObject;
-    }
-
-    private static object? Resolve(object currentObject, TokenInfo token)
-    {
-        if (token.Collection != null)
-        {
-            if (token.Collection.SelectAll)
-            {
-                throw new NotImplementedException("Collections SelectAll is not implemented");
-            }
-                
-            if (token.Collection.Literal != "")
-            {
-                throw new NotImplementedException("Collections is not implemented");
-            }
-
-            // array or list
-            var listProperty = currentObject.GetType().GetProperty(token.Field);
-
-            if (listProperty == null)
-            {
-                throw new ParserException($"property '{token.Field}' not found");
-            }
-
-            var list = listProperty.GetValue(currentObject) as IList;
-
-            if (list == null)
-            {
-                return null;
-            }
-
-            return list[token.Collection.Index.Value];
-        }
-
-        var prop = currentObject.GetType().GetProperty(token.Field);
-
-        if (prop == null)
-        {
-            throw new ParserException($"property '{token.Field}' not found");
-        }
-
-        return prop.GetValue(currentObject);
     }
 }

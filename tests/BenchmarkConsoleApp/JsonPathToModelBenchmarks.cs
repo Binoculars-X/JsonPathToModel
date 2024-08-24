@@ -13,8 +13,8 @@ public class JsonPathToModelBenchmarks
     // straight c# code return _model.Person.FirstName
     // 2.8 ns for straight
     // 3.0 ns for nested
-    [Benchmark]
-    public string DotNetCodeGetValue() => JsonPathToModelUsage.DotNetCodeGetValue();
+    //[Benchmark]
+    //public string DotNetCodeGetValue() => JsonPathToModelUsage.DotNetCodeGetValue();
 
     // 1st version of JsonPath navigation using basic string.Split parser
     // 514 ns for straight
@@ -34,6 +34,15 @@ public class JsonPathToModelBenchmarks
     //[Benchmark]
     //public string GetJsonPathStraightEmitterGet() => JsonPathToModelUsage.GetJsonPathStraightEmitterGet();
 
+    // 80 ns why?
+    [Benchmark]
+    public string JpathLatestGetValueResult() => JsonPathToModelUsage.JpathLatestGetValueResult();
+
+    // 25 ns
     [Benchmark]
     public string JpathLatestGetValue() => JsonPathToModelUsage.JpathLatestGetValue();
+
+    // 25 ns
+    [Benchmark]
+    public string ExpressionEngineGetValue() => JsonPathToModelUsage.ExpressionEngineGetValue();
 }

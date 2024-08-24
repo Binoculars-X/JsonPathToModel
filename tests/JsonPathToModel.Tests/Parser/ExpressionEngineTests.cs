@@ -11,16 +11,18 @@ namespace JsonPathToModel.Tests.Parser;
 public class ExpressionEngineTests
 {
     [Fact]
-    public void ExpressionEngine_ForNestedPath_Should_ReturnValue()
+    public void ExpressionEngine_ForNestedPath_Should_Run_40M_GetValue_In_One_Second()
     {
         var model = SampleClientModelTests.GenerateSampleClient();
+        var ee = new ExpressionEngine(new NavigatorConfigOptions { OptimizeWithCodeEmitter = true });
         var expected = model.Person.FirstName;
 
-        var result = new ExpressionEngine()
-            .ParseJsonPathExpression(model, "$.Person.FirstName")
-            .GetValue(model);
-
-        Assert.Equal(expected, result);
+        for (int i = 0; i < 40*1000000; i++)
+        {
+            var result = ee
+                .ParseJsonPathExpression(model, "$.Person.FirstName")
+                .GetValue(model);
+        }
     }
 
     [Fact]

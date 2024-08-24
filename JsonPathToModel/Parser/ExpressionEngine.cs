@@ -115,9 +115,9 @@ public class ExpressionEngine
         ExpressionResult cachedTokenInfo;
 
         if (_expressionCache.TryGetValue(type, out typeDicitonary))
-        { 
+        {
             if (typeDicitonary.TryGetValue(expressionText, out cachedTokenInfo))
-            {  
+            {
                 return cachedTokenInfo;
             }
         }
@@ -153,7 +153,7 @@ public class ExpressionEngine
 
     private Emit<Func<object, object>>? GetStraightEmitterGet(Type modelType, List<TokenInfo> tokens)
     {
-        if (_options.OptimizeWithCodeEmitter || tokens.Any(t => t.Collection != null))
+        if (!_options.OptimizeWithCodeEmitter || tokens.Any(t => t.Collection != null))
         {
             // only if OptimizeWithCodeEmitter option is enabled
             // collections not supported yet
@@ -201,7 +201,3 @@ public class ExpressionEngine
     }
 }
 
-public record ExpressionResult(List<TokenInfo> Tokens, Func<object, object>? FastDelegate)
-{
-    public readonly bool ContainsCollections = Tokens.Any(t => t.Collection != null);
-};
