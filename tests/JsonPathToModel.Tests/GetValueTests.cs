@@ -82,12 +82,12 @@ public class GetValueTests
         path = "$.Nested[100].Id";
         result = navi.GetValue(model, path);
         Assert.True(result.IsFailed);
-        Assert.Equal($"Path '{path}': IList index 100 is out of range", result.Errors.Single().Message);
+        Assert.Equal($"Path '{path}': Index was out of range. Must be non-negative and less than the size of the collection. (Parameter 'index')", result.Errors.Single().Message);
 
         path = "$.Nested[wrong].Id";
         result = navi.GetValue(model, path);
         Assert.True(result.IsFailed);
-        Assert.Equal($"Path '{path}': IList index 'wrong' is not int", result.Errors.Single().Message);
+        Assert.Equal($"Path '{path}': Illigal symbol 'w', ']' is expected", result.Errors.Single().Message);
     }
 
     [Fact]

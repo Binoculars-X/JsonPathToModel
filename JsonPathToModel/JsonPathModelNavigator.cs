@@ -83,7 +83,8 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
         }
         catch (Exception e)
         {
-            throw;
+            return Result.Fail($"Path '{path}': {e.Message}");
+            //throw;
         }
 
         //var selectResult = SelectLastPropertiesIterateThroughPath(model, modelBinding);
@@ -431,7 +432,7 @@ public record SelectPropertyResult(object? Target, PropertyInfo? Property)
 
 public static class ExpressionResultExtensions
 {
-    public static object GetValue(this ExpressionResult result, object target)
+    public static object? GetValue(this ExpressionResult result, object target)
     {
         // 1. If delegate provided
         if (result.FastDelegate != null)
@@ -445,6 +446,11 @@ public static class ExpressionResultExtensions
         for (int i = 1; i < result.Tokens.Count; i++)
         {
             currentObject = Resolve(currentObject, result.Tokens[i]);
+
+            if (currentObject == null)
+            {
+                return null;
+            }
         }
 
         return currentObject;
@@ -454,9 +460,41 @@ public static class ExpressionResultExtensions
     {
         if (token.Collection != null)
         {
-            throw new NotImplementedException("Collections not implemented");
+            if (token.Collection.SelectAll)
+            {
+                throw new NotImplementedException("Collections SelectAll is not implemented");
+            }
+                
+            if (token.Collection.Literal != "")
+            {
+                throw new NotImplementedException("Collections is not implemented");
+            }
+
+            // array or list
+            var listProperty = currentObject.GetType().GetProperty(token.Field);
+
+            if (listProperty == null)
+            {
+                throw new ParserException($"property '{token.Field}' not found");
+            }
+
+            var list = listProperty.GetValue(currentObject) as IList;
+
+            if (list == null)
+            {
+                return null;
+            }
+
+            return list[token.Collection.Index.Value];
         }
+
         var prop = currentObject.GetType().GetProperty(token.Field);
-        return prop?.GetValue(currentObject);
+
+        if (prop == null)
+        {
+            throw new ParserException($"property '{token.Field}' not found");
+        }
+
+        return prop.GetValue(currentObject);
     }
 }
