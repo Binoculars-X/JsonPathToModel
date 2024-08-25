@@ -147,8 +147,77 @@ public class ExpressionEngine
             }
         }
 
-        var result = new ExpressionResult(expression, tokenList, GetStraightEmitterGet(expression, type, tokenList)?.CreateDelegate());
+        var result = new ExpressionResult(expression, 
+            tokenList, 
+            GetStraightEmitterGet(expression, type, tokenList)?.CreateDelegate(),
+            GetStraightEmitterSet(expression, type, tokenList)?.CreateDelegate());
+
         _expressionCache[type][expression] = result;
+        return result;
+    }
+
+    public Emit<Action<object, object>>? GetStraightEmitterSet(string expression, Type modelType, List<TokenInfo> tokens)
+    {
+        if (!_options.OptimizeWithCodeEmitter || tokens.Any(t => t.Collection != null))
+        {
+            // only if OptimizeWithCodeEmitter option is enabled
+            // collections not supported yet
+            return null;
+        }
+
+        return null;
+
+        Emit<Action<object, object>> result;
+        var path = expression.Replace("$", "").Split('.').Where(c => !string.IsNullOrWhiteSpace(c)).ToList();
+
+        if (expression.Contains("[") || expression.Contains("]"))
+        {
+            throw new ArgumentException("Ony straight binding supported: '$.Model.SubModel.SubSubModel.Value'");
+        }
+
+        var currentType = modelType;
+        string prop;
+        PropertyInfo propInfo;
+
+        result = Emit<Action<object, object>>.NewDynamicMethod(expression.Replace("$", "").Replace(".", ""));
+        result.LoadArgument(0);
+
+        for (int i = 0; i < path.Count - 1; i++)
+        //foreach (var prop in path)
+        {
+            prop = path[i];
+            propInfo = currentType.GetProperty(prop);
+
+            result.CastClass(currentType);
+            result.Call(propInfo.GetGetMethod(true)!);
+
+            using (var a = result.DeclareLocal(propInfo.PropertyType))
+            {
+                result.StoreLocal(a);
+                result.LoadLocal(a);
+            }
+
+            currentType = propInfo.PropertyType;
+        }
+
+        result.CastClass(currentType);
+        prop = path.Last();
+        propInfo = currentType.GetProperty(prop);
+
+        result.LoadArgument(1);
+
+        if (propInfo.PropertyType.IsBoxable())
+        {
+            result.UnboxAny(propInfo.PropertyType);
+        }
+        else
+        {
+            result.CastClass(propInfo.PropertyType);
+        }
+
+        result.Call(propInfo.GetSetMethod(true)!);
+
+        result.Return();
         return result;
     }
 

@@ -129,7 +129,7 @@ public class GetValueResultTests
         var path = "$.NestedList[*].Id";
         var result = navi.GetValueResult(model, path);
         Assert.True(result.IsFailed);
-        Assert.Equal($"Path '{path}': cannot get single value from a wild card collection", result.Errors.Single().Message);
+        Assert.Equal($"Path '{path}': cannot get/set single value in a wild card collection", result.Errors.Single().Message);
     }
 
     [Fact]

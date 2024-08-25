@@ -1,8 +1,10 @@
-﻿using JsonPathToModel.Exceptions;
+﻿using FluentResults;
+using JsonPathToModel.Exceptions;
 using JsonPathToModel.Parser;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq.Expressions;
 using System.Text;
 
@@ -10,6 +12,76 @@ namespace JsonPathToModel;
 
 public static class ExpressionResultExtensions
 {
+    public static void SetValue(this ExpressionResult result, object target, object val)
+    {
+        // If delegate provided
+        if (result.SetDelegate != null)
+        {
+            try
+            {
+                result.SetDelegate(target, val);
+            }
+            catch (NullReferenceException)
+            {
+                // always throw exception, all nested properties must not be null
+                throw;
+            }
+        }
+
+        CheckForNotSinglePath(result);
+
+        // Iterate through tokens resolving value
+        var currentObject = target;
+
+        for (int i = 1; i < result.Tokens.Count-1; i++)
+        {
+            currentObject = Resolve(result.Expression, currentObject, result.Tokens[i]);
+
+            if (currentObject == null)
+            {
+                throw new NavigationException($"Path '{result.Expression}': SetValue cannot set as {result.Tokens[i].Field} is null"); ;
+            }
+        }
+
+        var property = currentObject.GetType().GetProperty(result.Tokens.Last().Field);
+
+        //if ((property as ICollection) != null)
+        //{
+        //    throw new NavigationException($"Path '{result.Expression}': SetValue replacing a collection is not supported");
+        //}
+
+        if (property == null || currentObject == null || property.SetMethod == null)
+        {
+            throw new NavigationException($"Path '{result.Expression}': property not found or SetMethod is null");
+        }
+
+        if (currentObject.GetType() == typeof(ExpandoObject))
+        {
+            // ToDo: this should be tested
+            (currentObject as ExpandoObject)!.SetValue(property.Name, val);
+        }
+        else if (property.PropertyType == typeof(int))
+        {
+            property.SetValue(currentObject, Convert.ToInt32(val));
+        }
+        else if (property.PropertyType == typeof(decimal))
+        {
+            property.SetValue(currentObject, Convert.ToDecimal(val));
+        }
+        else if (property.PropertyType == typeof(decimal?))
+        {
+            property.SetValue(currentObject, val == null ? (decimal?)null : Convert.ToDecimal(val));
+        }
+        else if (property.PropertyType == typeof(int?))
+        {
+            property.SetValue(currentObject, val == null ? (int?)null : Convert.ToInt32(val));
+        }
+        else
+        {
+            property.SetValue(currentObject, val);
+        }
+    }
+
     public static object? GetValue(this ExpressionResult result, object target)
     {
         // If delegate provided
@@ -30,10 +102,7 @@ public static class ExpressionResultExtensions
             }
         }
 
-        if (result.Tokens.Take(result.Tokens.Count-1).Any(t => t.Collection != null && t.Collection.SelectAll))
-        {
-            throw new NavigationException($"Path '{result.Expression}': cannot get single value from a wild card collection");
-        }
+        CheckForNotSinglePath(result);
 
         // Iterate through tokens resolving value
         var currentObject = target;
@@ -49,6 +118,14 @@ public static class ExpressionResultExtensions
         }
 
         return currentObject;
+    }
+
+    private static void CheckForNotSinglePath(ExpressionResult result)
+    {
+        if (result.Tokens.Take(result.Tokens.Count - 1).Any(t => t.Collection != null && t.Collection.SelectAll))
+        {
+            throw new NavigationException($"Path '{result.Expression}': cannot get/set single value in a wild card collection");
+        }
     }
 
     private static object? Resolve(string expression, object currentObject, TokenInfo token)

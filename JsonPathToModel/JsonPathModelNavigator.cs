@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -76,6 +77,17 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
         return value;
     }
 
+    public void SetValue(object model, string path, object val)
+    {
+        var result = _expressionEngine.ParseJsonPathExpression(model, path);
+        result.SetValue(model, val);
+    }
+
+    public List<object?> SelectValues(object model, string path)
+    {
+        throw new NotImplementedException();
+    }
+
     public Result<object?> GetValueResult(object model, string path)
     {
         try
@@ -96,66 +108,25 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
         }
     }
 
-    public Result SetValueResult(object model, string modelBinding, object val)
+    public Result SetValueResult(object model, string path, object val)
     {
-        var selectResult = SelectLastPropertiesIterateThroughPath(model, modelBinding);
-
-        if (selectResult.IsFailed)
+        try
         {
-            return Result.Fail(selectResult.Errors);
-        }
-
-        if (selectResult.Value == null || !selectResult.Value.Any())
-        {
+            SetValue(model, path, val);
             return Result.Ok();
         }
-
-        if (selectResult.Value.Count > 1)
+        catch (ParserException pex)
         {
-            return Result.Fail($"Path '{modelBinding}': expected one value but {selectResult.Value.Count} value(s) found");
+            return Result.Fail($"Path '{path}': {pex.Message}");
         }
-
-        var result = selectResult.Value.Single();
-        var targetObject = result.Target;
-        var property = result.Property;
-
-        if (property == null && result.Value != null)
+        catch (NavigationException nex)
         {
-            return Result.Fail($"Path '{modelBinding}': SetValue replacing a collection is not supported");
+            return Result.Fail($"{nex.Message}");
         }
-
-        if (property == null || targetObject == null || property.SetMethod == null)
+        catch (Exception e)
         {
-            return Result.Fail($"Path '{modelBinding}': property not found or SetMethod is null");
+            return Result.Fail($"Path '{path}': {e.Message}");
         }
-
-        if (targetObject.GetType() == typeof(ExpandoObject))
-        {
-            // ToDo: this should be tested
-            (targetObject as ExpandoObject)!.SetValue(property.Name, val);
-        }
-        else if (property.PropertyType == typeof(int))
-        {
-            property.SetValue(targetObject, Convert.ToInt32(val));
-        }
-        else if (property.PropertyType == typeof(decimal))
-        {
-            property.SetValue(targetObject, Convert.ToDecimal(val));
-        }
-        else if (property.PropertyType == typeof(decimal?))
-        {
-            property.SetValue(targetObject, val == null ? (decimal?)null : Convert.ToDecimal(val));
-        }
-        else if (property.PropertyType == typeof(int?))
-        {
-            property.SetValue(targetObject, val == null ? (int?)null : Convert.ToInt32(val));
-        }
-        else
-        {
-            property.SetValue(targetObject, val);
-        }
-
-        return Result.Ok();
     }
 
     private static Result<List<SelectPropertyResult>?> SelectLastPropertiesIterateThroughPath(object model, string modelBinding)
