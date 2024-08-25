@@ -44,8 +44,8 @@ public class GetValueResultTests
         var navi = GetNavigator();
         Assert.Equal("7", navi.GetValueResult(model, "$.Id").Value);
         Assert.Equal("Gerry", navi.GetValueResult(model, "$.Name").Value);
-        Assert.Equal("xyz", navi.GetValueResult(model, "$.Nested[0].Id").Value);
-        Assert.Equal("Pedro", navi.GetValueResult(model, "$.Nested[0].Name").Value);
+        Assert.Equal("xyz", navi.GetValueResult(model, "$.NestedList[0].Id").Value);
+        Assert.Equal("Pedro", navi.GetValueResult(model, "$.NestedList[0].Name").Value);
 
         model.Name = null;
         Assert.Null(navi.GetValueResult(model, "$.Name").Value);
@@ -93,22 +93,22 @@ public class GetValueResultTests
         Assert.True(result.IsFailed);
         Assert.Equal($"Path '{path}': property 'WrongProperty' not found", result.Errors.Single().Message);
 
-        path = "$.Nested[0].WrongSubProperty";
+        path = "$.NestedList[0].WrongSubProperty";
         result = navi.GetValueResult(model, path);
         Assert.True(result.IsFailed);
         Assert.Equal($"Path '{path}': property 'WrongSubProperty' not found", result.Errors.Single().Message);
 
-        path = "$.WrongProperty.Nested[0].Id";
+        path = "$.WrongProperty.NestedList[0].Id";
         result = navi.GetValueResult(model, path);
         Assert.True(result.IsFailed);
         Assert.Equal($"Path '{path}': property 'WrongProperty' not found", result.Errors.Single().Message);
 
-        path = "$.Nested[100].Id";
+        path = "$.NestedList[100].Id";
         result = navi.GetValueResult(model, path);
         Assert.True(result.IsFailed);
         Assert.Equal($"Path '{path}': Index was out of range. Must be non-negative and less than the size of the collection. (Parameter 'index')", result.Errors.Single().Message);
 
-        path = "$.Nested[wrong].Id";
+        path = "$.NestedList[wrong].Id";
         result = navi.GetValueResult(model, path);
         Assert.True(result.IsFailed);
         Assert.Equal($"Path '{path}': Illigal symbol 'w', ']' is expected", result.Errors.Single().Message);
@@ -129,7 +129,7 @@ public class GetValueResultTests
         var path = "$.NestedList[*].Id";
         var result = navi.GetValueResult(model, path);
         Assert.True(result.IsFailed);
-        Assert.Equal($"Path '{path}': expected one value but 2 value(s) found", result.Errors.Single().Message);
+        Assert.Equal($"Path '{path}': cannot get single value from a wild card collection", result.Errors.Single().Message);
     }
 
     [Fact]

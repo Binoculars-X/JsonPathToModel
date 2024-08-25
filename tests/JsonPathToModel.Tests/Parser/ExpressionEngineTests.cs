@@ -15,7 +15,6 @@ public class ExpressionEngineTests
     {
         var model = SampleClientModelTests.GenerateSampleClient();
         var ee = new ExpressionEngine(new NavigatorConfigOptions { OptimizeWithCodeEmitter = true });
-        var expected = model.Person.FirstName;
 
         for (int i = 0; i < 40*1000000; i++)
         {

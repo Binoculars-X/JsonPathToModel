@@ -18,8 +18,8 @@ public class SelectValuesTests
         var navi = new JsonPathModelNavigator();
         Assert.Equal("7", navi.SelectValuesResult(model, "$.Id").Value.Single());
         Assert.Equal("Gerry", navi.SelectValuesResult(model, "$.Name").Value.Single());
-        Assert.Equal("xyz", navi.SelectValuesResult(model, "$.Nested[*].Id").Value.Single());
-        Assert.Equal("Pedro", navi.SelectValuesResult(model, "$.Nested[*].Name").Value.Single());
+        Assert.Equal("xyz", navi.SelectValuesResult(model, "$.NestedList[*].Id").Value.Single());
+        Assert.Equal("Pedro", navi.SelectValuesResult(model, "$.NestedList[*].Name").Value.Single());
     }
 
     [Fact]

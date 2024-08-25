@@ -10,7 +10,7 @@ public static class ExpressionResultExtensions
 {
     public static object? GetValue(this ExpressionResult result, object target)
     {
-        // 1. If delegate provided
+        // If delegate provided
         if (result.GetDelegate != null)
         {
             try
@@ -28,9 +28,14 @@ public static class ExpressionResultExtensions
             }
         }
 
+        if (result.Tokens.Take(result.Tokens.Count-1).Any(t => t.Collection != null && t.Collection.SelectAll))
+        {
+            throw new ParserException("cannot get single value from a wild card collection");
+        }
+
         //throw new NotImplementedException();
 
-        // 2. Iterate through tokens resolving value
+        // Iterate through tokens resolving value
         var currentObject = target;
 
         for (int i = 1; i < result.Tokens.Count; i++)
@@ -118,7 +123,7 @@ public static class ExpressionResultExtensions
             return null;
         }
 
-        var collection = allProperty.GetValue(currentObject) as ICollection;
+        var collection = propertValue as ICollection;
 
         if (collection != null)
         {
