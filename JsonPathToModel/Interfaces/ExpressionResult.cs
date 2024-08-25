@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using JsonPathToModel.Parser;
 
-namespace JsonPathToModel.Parser;
+namespace JsonPathToModel.Interfaces;
 
-public record ExpressionResult(string Expression, 
-    List<TokenInfo> Tokens, 
+public record ExpressionResult(
+    string Expression,
+    List<TokenInfo> Tokens,
     Func<object, object>? GetDelegate,
     Action<object, object>? SetDelegate)
 {

@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using FluentResults;
 using JsonPathToModel.Exceptions;
 using JsonPathToModel.Parser;
+using JsonPathToModel.Interfaces;
 
 namespace JsonPathToModel;
 
@@ -40,30 +41,37 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
         return Result.Fail("Not found");
     }
  
-    public Result<List<object?>> SelectValuesResult(object model, string modelBinding)
+    public Result<List<object?>> SelectValuesResult(object model, string path)
     {
-        if (modelBinding == "")
+        try
         {
-            return Result.Ok(new[] { model }.ToList())!;
+            return SelectValues(model, path);
         }
-
-        var selectResult = SelectLastPropertiesIterateThroughPath(model, modelBinding);
-
-        if (selectResult.IsFailed)
+        catch (ParserException pex)
         {
-            return Result.Fail(selectResult.Errors);
+            return Result.Fail($"Path '{path}': {pex.Message}");
         }
-
-        var result = new List<object?>();
-
-        foreach (var itemResult in selectResult.Value!)
+        catch (NavigationException nex)
         {
-            result.Add(itemResult.Resolve());
+            return Result.Fail($"{nex.Message}");
         }
-
-        return result;
+        catch (Exception e)
+        {
+            return Result.Fail($"Path '{path}': {e.Message}");
+        }
     }
 
+    public List<object?> SelectValues(object model, string path)
+    {
+        if (path == "" || path == "$")
+        {
+            return [model];
+        }
+
+        var result = _expressionEngine.ParseJsonPathExpression(model, path);
+        var values = result.SelectValues(model);
+        return values;
+    }
 
     public object? GetValue(object model, string path)
     {
@@ -81,11 +89,6 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
     {
         var result = _expressionEngine.ParseJsonPathExpression(model, path);
         result.SetValue(model, val);
-    }
-
-    public List<object?> SelectValues(object model, string path)
-    {
-        throw new NotImplementedException();
     }
 
     public Result<object?> GetValueResult(object model, string path)
@@ -362,30 +365,5 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
             // error
             return Result.Fail($"Path '{modelBinding}': only IDictionary or IList collections are supported");
         }
-    }
-}
-
-public record SelectPropertyResult(object? Target, PropertyInfo? Property)
-{
-    public object? Value { get; private set; }
-
-    public static SelectPropertyResult FromValue(object value)
-    {
-        return new SelectPropertyResult(null, null) { Value = value };
-    }
-
-    public object? Resolve()
-    {
-        if (Value != null)
-        { 
-            return Value;
-        }
-
-        if (Property == null || Target == null)
-        {
-            return Target;
-        }
-
-        return Property.GetValue(Target);
     }
 }

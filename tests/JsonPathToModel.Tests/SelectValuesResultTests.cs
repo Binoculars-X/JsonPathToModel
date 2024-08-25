@@ -1,10 +1,9 @@
-using JsonPathToModel.Exceptions;
 using JsonPathToModel.Tests.ModelData;
 using System.IO;
 
 namespace JsonPathToModel.Tests;
 
-public class SelectValuesTests
+public class SelectValuesResultTests
 {
     [Fact]
     public void SelectValues_ShouldReturn_SingleValue()
@@ -17,10 +16,10 @@ public class SelectValuesTests
         };
 
         var navi = new JsonPathModelNavigator();
-        Assert.Equal("xyz", navi.SelectValues(model, "$.NestedList[*].Id").Single());
-        Assert.Equal("Pedro", navi.SelectValues(model, "$.NestedList[*].Name").Single());
-        Assert.Equal("7", navi.SelectValues(model, "$.Id").Single());
-        Assert.Equal("Gerry", navi.SelectValues(model, "$.Name").Single());
+        Assert.Equal("7", navi.SelectValuesResult(model, "$.Id").Value.Single());
+        Assert.Equal("Gerry", navi.SelectValuesResult(model, "$.Name").Value.Single());
+        Assert.Equal("xyz", navi.SelectValuesResult(model, "$.NestedList[*].Id").Value.Single());
+        Assert.Equal("Pedro", navi.SelectValuesResult(model, "$.NestedList[*].Name").Value.Single());
     }
 
     [Fact]
@@ -36,8 +35,9 @@ public class SelectValuesTests
         var navi = new JsonPathModelNavigator();
 
         var path = "$.WrongProperty.Nested[*].Id";
-        var pex = Assert.Throws<NavigationException>(() => navi.SelectValues(model, path));
-        Assert.Equal($"Path '{path}': property 'WrongProperty' not found", pex.Message);
+        var result = navi.SelectValuesResult(model, path);
+        Assert.True(result.IsFailed);
+        Assert.Equal($"Path '{path}': property 'WrongProperty' not found", result.Errors.Single().Message);
     }
 
     [Fact]
@@ -53,8 +53,9 @@ public class SelectValuesTests
         var navi = new JsonPathModelNavigator();
 
         var path = "$.NestedDictionary['WrongKey'].Id";
-        var pex = Assert.Throws<NavigationException>(() => navi.SelectValues(model, path));
-        Assert.Equal($"Path '{path}': dictionary key 'WrongKey' not found", pex.Message);
+        var result = navi.SelectValuesResult(model, path);
+        Assert.True(result.IsFailed);
+        Assert.Equal($"Path '{path}': dictionary key 'WrongKey' not found", result.Errors.Single().Message);
     }
 
     [Fact]
@@ -70,8 +71,9 @@ public class SelectValuesTests
         var navi = new JsonPathModelNavigator();
 
         var path = "$.NestedDictionary['key1'].Name";
-        var result = navi.SelectValues(model, path);
-        Assert.Equal("Pedro", result.Single());
+        var result = navi.SelectValuesResult(model, path);
+        Assert.False(result.IsFailed);
+        Assert.Equal("Pedro", result.Value.Single());
     }
 
     [Fact]
@@ -87,8 +89,9 @@ public class SelectValuesTests
         var navi = new JsonPathModelNavigator();
 
         var path = "$.NestedDictionary[*].Id";
-        var result = navi.SelectValues(model, path);
-        Assert.Equal("xyz", result.Single());
+        var result = navi.SelectValuesResult(model, path);
+        Assert.False(result.IsFailed);
+        Assert.Equal("xyz", result.Value.Single());
     }
 
     [Fact]
@@ -104,13 +107,9 @@ public class SelectValuesTests
         var navi = new JsonPathModelNavigator();
 
         var path = "$.NestedDictionary[*]";
-        var result = navi.SelectValues(model, path);
-        Assert.Single(result);
-
-        var item = result.Single() as SampleNested;
-        Assert.NotNull(item);
-        Assert.Equal("xyz", item.Id);
-        Assert.Equal("Pedro", item.Name);
+        var result = navi.SelectValuesResult(model, path);
+        Assert.False(result.IsFailed);
+        Assert.Single(result.Value);
     }
 
     [Fact]
@@ -126,12 +125,8 @@ public class SelectValuesTests
         var navi = new JsonPathModelNavigator();
 
         var path = "$.NestedList[*]";
-        var result = navi.SelectValues(model, path);
-        Assert.Single(result);
-
-        var item = result.Single() as SampleNested;
-        Assert.NotNull(item);
-        Assert.Equal("xyz", item.Id);
-        Assert.Equal("Pedro", item.Name);
+        var result = navi.SelectValuesResult(model, path);
+        Assert.False(result.IsFailed);
+        Assert.Single(result.Value);
     }
 }

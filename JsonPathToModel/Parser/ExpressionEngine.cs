@@ -5,6 +5,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using JsonPathToModel.Exceptions;
+using JsonPathToModel.Interfaces;
 
 namespace JsonPathToModel.Parser;
 
