@@ -1,7 +1,23 @@
 ﻿# JsonPathToModel
-Use JsonPath to navigate through .NET in memory models
+Use JSONPath to navigate through .NET in-memory models
 
-Usage:
+**DI registration:**
+
+```
+// program
+...
+    services.AddJsonPathToModel(options => 
+                { 
+                    options.OptimizeWithCodeEmitter = true;
+                });
+...
+
+// constructor
+public void MyService(IJsonPathModelNavigator navigator)
+...
+```
+
+**Usage:**
 
 ```
 var model = new SampleModel
@@ -21,7 +37,9 @@ navi.SelectValues(model, "$.Nested[*].Name");
 
 var result = navi.SetValue(model, "$.Nested[0].Name", "Abdula");
 ```
-Model:
+
+**Model:**
+
 ```
 public class SampleModel
 {
@@ -36,3 +54,16 @@ public class SampleNested
     public string Name { get; set; }
 }
 ```
+
+**Release Notes**
+
+**1.2.0:**
+- Dramatically improved performance
+- Added DI services registration
+- Added Sigil Emitter optimizations for GetValue simple expressions like '$.Person.FirstName'
+- Added Tokenizer for parsing JSONPath expressions
+- Refactored exceptions
+- ***Breaking changes:*** GetValue now throws exceptions, for Result<> pattern use GetValueResult
+
+**1.0.0 - 1.1.0:**
+- Initital import from ProCodersPtyLtd/BlazorForms

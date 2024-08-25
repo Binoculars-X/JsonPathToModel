@@ -27,6 +27,7 @@ public class JsonPathToModelUsage
         _model = SampleClientModelTests.GenerateSampleClient();
         _model.BusinessId = "Java";
         _model.Person.FirstName = "Abba";
+        _model.Person.Emails.Add(new Email() { Value = "java.abba@gmail.com" });
         //_netsedEmitter = FastReflectionPrototype.GetNestedEmitter(_model, "$.Nested.Value").CreateDelegate();
 
         //var func = ExpressionEngine.GetJsonPathStraightEmitterGet(_model.GetType(), "$.Person.FirstName");
@@ -51,6 +52,11 @@ public class JsonPathToModelUsage
     public static string JpathLatestGetValue()
     {
         return _navi.GetValue(_model, "$.Person.FirstName").ToString();
+    }
+
+    public static string JpathLatestGetValueList()
+    {
+        return _navi.GetValue(_model, "$.Person.Emails[0].Value").ToString();
     }
 
     public static string JpathLatestGetValueResult()

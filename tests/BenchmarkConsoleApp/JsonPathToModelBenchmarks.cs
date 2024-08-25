@@ -35,14 +35,18 @@ public class JsonPathToModelBenchmarks
     //public string GetJsonPathStraightEmitterGet() => JsonPathToModelUsage.GetJsonPathStraightEmitterGet();
 
     // 80 ns why?
+    //[Benchmark]
+    //public string JpathLatestGetValueResult() => JsonPathToModelUsage.JpathLatestGetValueResult();
+
+    // 151 ns
     [Benchmark]
-    public string JpathLatestGetValueResult() => JsonPathToModelUsage.JpathLatestGetValueResult();
+    public string JpathLatestGetValueList() => JsonPathToModelUsage.JpathLatestGetValueList();
 
     // 25 ns
-    [Benchmark]
-    public string JpathLatestGetValue() => JsonPathToModelUsage.JpathLatestGetValue();
+    //[Benchmark]
+    //public string JpathLatestGetValue() => JsonPathToModelUsage.JpathLatestGetValue();
 
     // 25 ns
-    [Benchmark]
-    public string ExpressionEngineGetValue() => JsonPathToModelUsage.ExpressionEngineGetValue();
+    //[Benchmark]
+    //public string ExpressionEngineGetValue() => JsonPathToModelUsage.ExpressionEngineGetValue();
 }
