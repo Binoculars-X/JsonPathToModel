@@ -112,7 +112,7 @@ If you like what I do and it is helpful, you can give me a cup of coffee :)
 **1.2.0:**
 - Dramatically improved performance
 - Added DI services registration
-- Added Sigil Emitter optimizations for GetValue simple expressions like '$.Person.FirstName'
+- Added Sigil Emitter optimizations for GetValue/SetValue simple expressions like '$.Person.FirstName'
 - Added Tokenizer for parsing JSONPath expressions
 - Refactored exceptions
 - ***Breaking changes:*** GetValue now throws exceptions, for Result<> pattern use GetValueResult

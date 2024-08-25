@@ -17,7 +17,6 @@ public static class ExpressionResultExtensions
     public static List<object?> SelectValues(this ExpressionResult result, object target)
     {
         var resultList = new List<object?>();
-        var selectResult = new List<SelectPropertyResult>();
         var currentValues = new object?[] { target }.ToList();
         var lastToken = result.Tokens.Last();
 
