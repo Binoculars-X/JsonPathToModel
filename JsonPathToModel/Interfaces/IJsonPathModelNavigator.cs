@@ -9,9 +9,11 @@ namespace JsonPathToModel;
 
 public interface IJsonPathModelNavigator
 {
-    object? GetValue(object model, string modelBinding);
-    Result<object?> GetValueResult(object model, string modelBinding);
-    Result<IEnumerable<object>> GetItemsResult(object model, string itemsBinding);
-    Result SetValueResult(object model, string modelBinding, object val);
-    Result<List<object?>> SelectValuesResult(object model, string modelBinding);
+    object? GetValue(object model, string path);
+    void SetValue(object model, string path, object val);
+    List<object?> SelectValues(object model, string path);
+    Result<object?> GetValueResult(object model, string path);
+    Result<IEnumerable<object>> GetItemsResult(object model, string itemsPath);
+    Result SetValueResult(object model, string path, object val);
+    Result<List<object?>> SelectValuesResult(object model, string path);
 }

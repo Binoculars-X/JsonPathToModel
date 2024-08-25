@@ -103,7 +103,7 @@ public class GetValueTests
         var navi = GetNavigator();
 
         var pex = Assert.Throws<NavigationException>(() => navi.GetValue(model, "$.NestedList[*].Id"));
-        Assert.Equal($"Path '$.NestedList[*].Id': cannot get single value from a wild card collection", pex.Message);
+        Assert.Equal($"Path '$.NestedList[*].Id': cannot get/set single value in a wild card collection", pex.Message);
     }
 
     [Fact]

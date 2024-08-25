@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using JsonPathToModel.Tests.Benchmarks;
 
 namespace BenchmarkConsoleApp;
 
@@ -15,6 +16,10 @@ public class JsonPathToModelBenchmarks
     // 3.0 ns for nested
     //[Benchmark]
     //public string DotNetCodeGetValue() => JsonPathToModelUsage.DotNetCodeGetValue();
+
+    // 3.1 ns for straight
+    //[Benchmark]
+    //public string DotNetCodeSetValue() => JsonPathToModelUsage.DotNetCodeSetValue();
 
     // 1st version of JsonPath navigation using basic string.Split parser
     // 514 ns for straight
@@ -39,12 +44,17 @@ public class JsonPathToModelBenchmarks
     //public string JpathLatestGetValueResult() => JsonPathToModelUsage.JpathLatestGetValueResult();
 
     // 151 ns
-    [Benchmark]
-    public string JpathLatestGetValueList() => JsonPathToModelUsage.JpathLatestGetValueList();
+    //[Benchmark]
+    //public string JpathLatestGetValueList() => JsonPathToModelUsage.JpathLatestGetValueList();
 
     // 25 ns
     //[Benchmark]
     //public string JpathLatestGetValue() => JsonPathToModelUsage.JpathLatestGetValue();
+
+    // 28 ns optimized
+    // 124 ns not optimized
+    [Benchmark]
+    public string JpathLatestSetValue() => JsonPathToModelUsage.JpathLatestSetValue();
 
     // 25 ns
     //[Benchmark]
