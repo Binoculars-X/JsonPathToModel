@@ -9,7 +9,7 @@ using JsonPathToModel.Parser;
 using Sigil;
 using JsonPathToModel.Tests.Examples;
 
-namespace BenchmarkConsoleApp;
+namespace JsonPathToModel.Tests.Benchmarks;
 
 public class JsonPathToModelUsage
 {
@@ -32,12 +32,22 @@ public class JsonPathToModelUsage
 
         //var func = ExpressionEngine.GetJsonPathStraightEmitterGet(_model.GetType(), "$.Person.FirstName");
         //_emitter = func.CreateDelegate();
+
+        // generate cache
+        _navi.SetValue(_model, "$.Person.FirstName", "new name");
     }
 
     public static string DotNetCodeGetValue()
     {
         //return _model.BusinessId;
         return _model.Person.FirstName;
+    }
+
+    public static string DotNetCodeSetValue()
+    {
+        //return _model.BusinessId;
+        _model.Person.FirstName = "new name";
+        return "ok";
     }
 
 
@@ -52,6 +62,12 @@ public class JsonPathToModelUsage
     public static string JpathLatestGetValue()
     {
         return _navi.GetValue(_model, "$.Person.FirstName").ToString();
+    }
+
+    public static string JpathLatestSetValue()
+    {
+        _navi.SetValue(_model, "$.Person.FirstName", "new name");
+        return "ok";
     }
 
     public static string JpathLatestGetValueList()

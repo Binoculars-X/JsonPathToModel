@@ -10,6 +10,11 @@ namespace JsonPathToModel.Tests;
 
 public class SetValueTests
 {
+    private JsonPathModelNavigator GetNavigator()
+    {
+        return new JsonPathModelNavigator(new NavigatorConfigOptions { OptimizeWithCodeEmitter = false });
+    }
+
     [Fact]
     public void SetValue_ShouldChange_SingleValue()
     {
@@ -20,8 +25,9 @@ public class SetValueTests
             NestedList = new([new SampleNested { Id = "xyz", Name = "Pedro" }])
         };
 
-        var navi = new JsonPathModelNavigator();
+        var navi = GetNavigator();
 
+        navi.SetValue(model, "$.Id", "new id");
         navi.SetValue(model, "$.Id", "new id");
         Assert.Equal("new id", model.Id);
 
@@ -42,7 +48,7 @@ public class SetValueTests
             NestedList = new([new SampleNested { Id = "xyz", Name = "Pedro" }])
         };
 
-        var navi = new JsonPathModelNavigator();
+        var navi = GetNavigator();
 
         var pex = Assert.Throws<NavigationException>(() => navi.SetValue(model, "$.WrongId", "new id"));
         Assert.Equal($"Path '$.WrongId': property not found or SetMethod is null", pex.Message);
@@ -58,7 +64,7 @@ public class SetValueTests
             NestedList = new([new SampleNested { Id = "xyz", Name = "Pedro" }, new SampleNested { Id = "xzz", Name = "Lucia" }])
         };
 
-        var navi = new JsonPathModelNavigator();
+        var navi = GetNavigator();
 
         var pex = Assert.Throws<NavigationException>(() => navi.SetValue(model, "$.NestedList[*].Id", "new id"));
         Assert.Equal("Path '$.NestedList[*].Id': cannot get/set single value in a wild card collection", pex.Message);

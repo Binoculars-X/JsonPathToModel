@@ -165,7 +165,7 @@ public class ExpressionEngine
             return null;
         }
 
-        return null;
+        //return null;
 
         Emit<Action<object, object>> result;
         var path = expression.Replace("$", "").Split('.').Where(c => !string.IsNullOrWhiteSpace(c)).ToList();

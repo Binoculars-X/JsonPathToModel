@@ -20,6 +20,7 @@ public static class ExpressionResultExtensions
             try
             {
                 result.SetDelegate(target, val);
+                return;
             }
             catch (NullReferenceException)
             {
