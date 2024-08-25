@@ -115,6 +115,7 @@ If you like what I do and it is helpful, you can give me a cup of coffee :)
 - Added Sigil Emitter optimizations for GetValue/SetValue simple expressions like '$.Person.FirstName'
 - Added Tokenizer for parsing JSONPath expressions
 - Refactored exceptions
+- -> NETStandard2.1
 - ***Breaking changes:*** GetValue now throws exceptions, for Result<> pattern use GetValueResult
 
 **1.0.0 - 1.1.0:**
