@@ -14,6 +14,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		readme.txt = readme.txt
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{063A52BE-E5B2-4776-A5B5-CEAB7C711E4E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{EED9901A-E480-434E-9067-6AD126CECA96}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BenchmarkConsoleApp", "tests\BenchmarkConsoleApp\BenchmarkConsoleApp.csproj", "{7E65EF54-0FE4-46B8-B02D-B13086A5EE08}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -28,9 +34,18 @@ Global
 		{F8349435-72F1-4343-9427-88382948CA81}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F8349435-72F1-4343-9427-88382948CA81}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F8349435-72F1-4343-9427-88382948CA81}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E65EF54-0FE4-46B8-B02D-B13086A5EE08}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E65EF54-0FE4-46B8-B02D-B13086A5EE08}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E65EF54-0FE4-46B8-B02D-B13086A5EE08}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E65EF54-0FE4-46B8-B02D-B13086A5EE08}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{7A8E6444-83F4-42DC-B230-23326B0B628E} = {EED9901A-E480-434E-9067-6AD126CECA96}
+		{F8349435-72F1-4343-9427-88382948CA81} = {063A52BE-E5B2-4776-A5B5-CEAB7C711E4E}
+		{7E65EF54-0FE4-46B8-B02D-B13086A5EE08} = {063A52BE-E5B2-4776-A5B5-CEAB7C711E4E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A4AE813D-2EB5-4D90-8C96-677BF079B236}

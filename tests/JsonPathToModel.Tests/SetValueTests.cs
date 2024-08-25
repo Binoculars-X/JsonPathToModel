@@ -16,25 +16,25 @@ public class SetValueTests
         {
             Id = "7",
             Name = "Gerry",
-            Nested = new([new SampleNested { Id = "xyz", Name = "Pedro" }])
+            NestedList = new([new SampleNested { Id = "xyz", Name = "Pedro" }])
         };
 
         var navi = new JsonPathModelNavigator();
 
-        var result = navi.SetValue(model, "$.Id", "new id");
+        var result = navi.SetValueResult(model, "$.Id", "new id");
         Assert.NotNull(result);
         Assert.True(result.IsSuccess);
         Assert.Equal("new id", model.Id);
 
-        result = navi.SetValue(model, "$.Name", "new name");
+        result = navi.SetValueResult(model, "$.Name", "new name");
         Assert.NotNull(result);
         Assert.True(result.IsSuccess);
         Assert.Equal("new name", model.Name);
 
-        result = navi.SetValue(model, "$.Nested[0].Name", "nested name");
+        result = navi.SetValueResult(model, "$.NestedList[0].Name", "nested name");
         Assert.NotNull(result);
         Assert.True(result.IsSuccess);
-        Assert.Equal("nested name", model.Nested[0].Name);
+        Assert.Equal("nested name", model.NestedList[0].Name);
     }
 
     [Fact]
@@ -44,12 +44,12 @@ public class SetValueTests
         {
             Id = "7",
             Name = "Gerry",
-            Nested = new([new SampleNested { Id = "xyz", Name = "Pedro" }])
+            NestedList = new([new SampleNested { Id = "xyz", Name = "Pedro" }])
         };
 
         var navi = new JsonPathModelNavigator();
 
-        var result = navi.SetValue(model, "$.WrongId", "new id");
+        var result = navi.SetValueResult(model, "$.WrongId", "new id");
         Assert.NotNull(result);
         Assert.True(result.IsFailed);
     }
@@ -61,15 +61,15 @@ public class SetValueTests
         {
             Id = "7",
             Name = "Gerry",
-            Nested = new([new SampleNested { Id = "xyz", Name = "Pedro" }, new SampleNested { Id = "xzz", Name = "Lucia" }])
+            NestedList = new([new SampleNested { Id = "xyz", Name = "Pedro" }, new SampleNested { Id = "xzz", Name = "Lucia" }])
         };
 
         var navi = new JsonPathModelNavigator();
 
-        var result = navi.SetValue(model, "$.Nested[*].Id", "new id");
+        var result = navi.SetValueResult(model, "$.NestedList[*].Id", "new id");
         Assert.NotNull(result);
         Assert.True(result.IsFailed);
-        Assert.Equal("Path '$.Nested[*].Id': expected one value but 2 value(s) found", result.Errors.Single().Message);
+        Assert.Equal("Path '$.NestedList[*].Id': expected one value but 2 value(s) found", result.Errors.Single().Message);
     }
 
     [Fact(Skip = "This is may be a useful case to replace a collection")]
@@ -79,17 +79,17 @@ public class SetValueTests
         {
             Id = "7",
             Name = "Gerry",
-            Nested = new([new SampleNested { Id = "xyz", Name = "Pedro" }])
+            NestedList = new([new SampleNested { Id = "xyz", Name = "Pedro" }])
         };
 
         var navi = new JsonPathModelNavigator();
 
-        var result = navi.SetValue(model, "$.Nested[*]", model.Nested);
+        var result = navi.SetValueResult(model, "$.Nested[*]", model.NestedList);
         Assert.NotNull(result);
         Assert.True(result.IsFailed);
         Assert.Equal("Path '$.Nested[*]': SetValue replacing a collection is not supported", result.Errors.Single().Message);
 
-        result = navi.SetValue(model, "$.Nested[]", model.Nested);
+        result = navi.SetValueResult(model, "$.Nested[]", model.NestedList);
         Assert.NotNull(result);
         Assert.True(result.IsFailed);
         Assert.Equal("Path '$.Nested[]': SetValue replacing a collection is not supported", result.Errors.Single().Message);

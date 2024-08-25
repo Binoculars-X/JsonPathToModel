@@ -1,11 +1,36 @@
+using FluentResults;
+using JsonPathToModel.Exceptions;
 using JsonPathToModel.Tests.ModelData;
 using System.Collections;
 using System.IO;
+using System.Xml.Linq;
 
 namespace JsonPathToModel.Tests;
 
 public class GetValueTests
 {
+    private JsonPathModelNavigator GetNavigator()
+    {
+        return new JsonPathModelNavigator(new NavigatorConfigOptions { OptimizeWithCodeEmitter = true });
+    }
+
+    [Fact]
+    public void GetValue_ShouldRead_NestedValue()
+    {
+        var model = new SampleModel
+        {
+            Id = "7",
+            Name = "Gerry",
+            Nested = new SampleNested { Id = "xyz", Name = "Pedro" }
+        };
+
+        var navi = GetNavigator();
+        Assert.Equal("Pedro", navi.GetValue(model, "$.Nested.Name"));
+
+        model.Name = null;
+        Assert.Null(navi.GetValue(model, "$.Name"));
+    }
+
     [Fact]
     public void GetValue_ShouldReadValue()
     {
@@ -13,17 +38,17 @@ public class GetValueTests
         {
             Id = "7",
             Name = "Gerry",
-            Nested = new([new SampleNested { Id = "xyz", Name = "Pedro" }])
+            NestedList = new([new SampleNested { Id = "xyz", Name = "Pedro" }])
         };
 
-        var navi = new JsonPathModelNavigator();
-        Assert.Equal("7", navi.GetValue(model, "$.Id").Value);
-        Assert.Equal("Gerry", navi.GetValue(model, "$.Name").Value);
-        Assert.Equal("xyz", navi.GetValue(model, "$.Nested[0].Id").Value);
-        Assert.Equal("Pedro", navi.GetValue(model, "$.Nested[0].Name").Value);
+        var navi = GetNavigator();
+        Assert.Equal("7", navi.GetValue(model, "$.Id"));
+        Assert.Equal("Gerry", navi.GetValue(model, "$.Name"));
+        Assert.Equal("xyz", navi.GetValue(model, "$.NestedList[0].Id"));
+        Assert.Equal("Pedro", navi.GetValue(model, "$.NestedList[0].Name"));
 
         model.Name = null;
-        Assert.Null(navi.GetValue(model, "$.Name").Value);
+        Assert.Null(navi.GetValue(model, "$.Name"));
     }
 
     [Fact]
@@ -36,14 +61,13 @@ public class GetValueTests
             NestedDictionary = new Dictionary<string, SampleNested>() { { "key1", new SampleNested { Id = "xyz", Name = "Pedro" } } }
         };
 
-        var navi = new JsonPathModelNavigator();
-        Assert.Equal("Pedro", navi.GetValue(model, "$.NestedDictionary[key1].Name").Value);
-        Assert.Equal("xyz", navi.GetValue(model, "$.NestedDictionary[key1].Id").Value);
+        var navi = GetNavigator();
+        Assert.Equal("Pedro", navi.GetValue(model, "$.NestedDictionary['key1'].Name"));
+        Assert.Equal("xyz", navi.GetValue(model, "$.NestedDictionary['key1'].Id"));
 
         model.NestedDictionary = null;
-        var result = navi.GetValue(model, "$.NestedDictionary[key1].Id");
-        Assert.True(result.IsSuccess);
-        Assert.Null(result.Value);
+        var result = navi.GetValue(model, "$.NestedDictionary['key1'].Id");
+        Assert.Null(result);
     }
 
     [Fact]
@@ -53,40 +77,17 @@ public class GetValueTests
         {
             Id = "7",
             Name = "Gerry",
-            Nested = new([new SampleNested { Id = "xyz", Name = "Pedro" }])
+            NestedList = new([new SampleNested { Id = "xyz", Name = "Pedro" }])
         };
 
-        var navi = new JsonPathModelNavigator();
+        var navi = GetNavigator();
 
-        var path = "$.WrongProperty";
-        var result = navi.GetValue(model, path);
-        Assert.True(result.IsFailed);
-        Assert.Equal($"Path '{path}': property 'WrongProperty' not found", result.Errors.Single().Message);
-
-        path = "$.WrongProperty.WrongSubProperty";
-        result = navi.GetValue(model, path);
-        Assert.True(result.IsFailed);
-        Assert.Equal($"Path '{path}': property 'WrongProperty' not found", result.Errors.Single().Message);
-
-        path = "$.Nested[0].WrongSubProperty";
-        result = navi.GetValue(model, path);
-        Assert.True(result.IsFailed);
-        Assert.Equal($"Path '{path}': property 'WrongSubProperty' not found", result.Errors.Single().Message);
-
-        path = "$.WrongProperty.Nested[0].Id";
-        result = navi.GetValue(model, path);
-        Assert.True(result.IsFailed);
-        Assert.Equal($"Path '{path}': property 'WrongProperty' not found", result.Errors.Single().Message);
-
-        path = "$.Nested[100].Id";
-        result = navi.GetValue(model, path);
-        Assert.True(result.IsFailed);
-        Assert.Equal($"Path '{path}': IList index 100 is out of range", result.Errors.Single().Message);
-
-        path = "$.Nested[wrong].Id";
-        result = navi.GetValue(model, path);
-        Assert.True(result.IsFailed);
-        Assert.Equal($"Path '{path}': IList index 'wrong' is not int", result.Errors.Single().Message);
+        Assert.Throws<NavigationException>(() => navi.GetValue(model, "$.WrongProperty"));
+        Assert.Throws<NavigationException>(() => navi.GetValue(model, "$.WrongProperty.WrongSubProperty"));
+        Assert.Throws<NavigationException>(() => navi.GetValue(model, "$.NestedList[0].WrongSubProperty"));
+        Assert.Throws<NavigationException>(() => navi.GetValue(model, "$.WrongProperty.NestedList[0].Id"));
+        Assert.Throws<ArgumentOutOfRangeException>(() => navi.GetValue(model, "$.NestedList[100].Id"));
+        Assert.Throws<ParserException>(() => navi.GetValue(model, "$.NestedList[wrong].Id"));
     }
 
     [Fact]
@@ -96,15 +97,13 @@ public class GetValueTests
         {
             Id = "7",
             Name = "Gerry",
-            Nested = new([new SampleNested { Id = "xyz", Name = "Pedro" }, new SampleNested { Id = "xzz", Name = "Antuan" }])
+            NestedList = new([new SampleNested { Id = "xyz", Name = "Pedro" }, new SampleNested { Id = "xzz", Name = "Antuan" }])
         };
 
-        var navi = new JsonPathModelNavigator();
+        var navi = GetNavigator();
 
-        var path = "$.Nested[*].Id";
-        var result = navi.GetValue(model, path);
-        Assert.True(result.IsFailed);
-        Assert.Equal($"Path '{path}': expected one value but 2 value(s) found", result.Errors.Single().Message);
+        var pex = Assert.Throws<NavigationException>(() => navi.GetValue(model, "$.NestedList[*].Id"));
+        Assert.Equal($"Path '$.NestedList[*].Id': cannot get single value from a wild card collection", pex.Message);
     }
 
     [Fact]
@@ -117,12 +116,11 @@ public class GetValueTests
             NestedDictionary = new Dictionary<string, SampleNested>() { { "key1", new SampleNested { Id = "xyz", Name = "Pedro" } } }
         };
 
-        var navi = new JsonPathModelNavigator();
+        var navi = GetNavigator();
 
         var path = "$.NestedDictionary[*]";
         var result = navi.GetValue(model, path);
-        Assert.False(result.IsFailed);
-        Assert.Single(result.Value as IEnumerable);
+        Assert.Single(result as IEnumerable);
     }
 
     [Fact]
@@ -135,17 +133,15 @@ public class GetValueTests
             NestedDictionary = new Dictionary<string, SampleNested>() { { "key1", new SampleNested { Id = "xyz", Name = "Pedro" } } }
         };
 
-        var navi = new JsonPathModelNavigator();
+        var navi = GetNavigator();
 
-        var path = "$.NestedDictionary[key1].Id";
+        var path = "$.NestedDictionary['key1'].Id";
         var result = navi.GetValue(model, path);
-        Assert.False(result.IsFailed);
-        Assert.Equal("xyz", result.Value);
+        Assert.Equal("xyz", result);
 
-        path = "$.NestedDictionary[key1].Name";
+        path = "$.NestedDictionary['key1'].Name";
         result = navi.GetValue(model, path);
-        Assert.False(result.IsFailed);
-        Assert.Equal("Pedro", result.Value);
+        Assert.Equal("Pedro", result);
     }
 
     [Fact]
@@ -158,11 +154,26 @@ public class GetValueTests
             NestedDictionary = new Dictionary<string, SampleNested>() { { "key1", new SampleNested { Id = "xyz", Name = "Pedro" } } }
         };
 
-        var navi = new JsonPathModelNavigator();
+        var navi = GetNavigator();
 
-        var path = "$.NestedDictionary[wrong].Id";
-        var result = navi.GetValue(model, path);
-        Assert.True(result.IsFailed);
+        var pex = Assert.Throws<NavigationException>(() => navi.GetValue(model, "$.NestedDictionary['wrong'].Id"));
+        Assert.Equal("Path '$.NestedDictionary['wrong'].Id': dictionary key 'wrong' not found", pex.Message);
+    }
+
+    [Fact]
+    public void GetValue_Should_ReturnNull_WhenDictionaryIndexSupplied()
+    {
+        var model = new SampleModel
+        {
+            Id = "7",
+            Name = "Gerry",
+            NestedDictionary = new Dictionary<string, SampleNested>() { { "key1", new SampleNested { Id = "xyz", Name = "Pedro" } } }
+        };
+
+        var navi = GetNavigator();
+
+        var value = navi.GetValue(model, "$.NestedDictionary[0].Id");
+        Assert.Null(value);
     }
 
     [Fact]
@@ -175,11 +186,10 @@ public class GetValueTests
             NestedDictionary = null
         };
 
-        var navi = new JsonPathModelNavigator();
+        var navi = GetNavigator();
 
-        var path = "$.NestedDictionary[wrong].Id";
+        var path = "$.NestedDictionary['wrong'].Id";
         var result = navi.GetValue(model, path);
-        Assert.False(result.IsFailed);
-        Assert.Null(result.Value);
+        Assert.Null(result);
     }
 }

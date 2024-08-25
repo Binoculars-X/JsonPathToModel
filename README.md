@@ -1,6 +1,22 @@
 # JsonPathToModel
 Use JsonPath to navigate through .NET in-memory models
 
+**DI registration:**
+
+```
+// program
+...
+    services.AddJsonPathToModel(options => 
+                { 
+                    options.OptimizeWithCodeEmitter = true;
+                });
+...
+
+// use in constructor
+public void MyService(IJsonPathModelNavigator navigator)
+...
+```
+
 **Usage:**
 
 ```
@@ -90,3 +106,16 @@ var result4 = navi.SetValue(model, "$.Person.PrimaryContact.Email.Value", "a@a.c
 ```
 If you like what I do and it is helpful, you can give me a cup of coffee :)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate?hosted_button_id=Q7XEPGTBQFWNG)
+
+**Release Notes**
+
+**1.2.0:**
+- Dramatically improved performance
+- Added DI services registration
+- Added Sigil Emitter optimizations for GetValue simple expressions like '$.Person.FirstName'
+- Added Tokenizer for parsing JSONPath expressions
+- Refactored exceptions
+- ***Breaking changes:*** GetValue now throws exceptions, for Result<> pattern use GetValueResult
+
+**1.0.0 - 1.1.0:**
+- Initital import from ProCodersPtyLtd/BlazorForms

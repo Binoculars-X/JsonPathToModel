@@ -7,14 +7,29 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using FluentResults;
+using JsonPathToModel.Exceptions;
+using JsonPathToModel.Parser;
 
 namespace JsonPathToModel;
 
 public class JsonPathModelNavigator : IJsonPathModelNavigator
 {
-    public Result<IEnumerable<object>> GetItems(object model, string itemsBinding)
+    internal readonly NavigatorConfigOptions _options;
+    private readonly ExpressionEngine _expressionEngine;
+
+    public JsonPathModelNavigator() : this(new NavigatorConfigOptions())
     {
-        var result = GetValue(model, itemsBinding) as IEnumerable<object>;
+    }
+
+    public JsonPathModelNavigator(NavigatorConfigOptions options)
+    {
+        _options = options;
+        _expressionEngine = new ExpressionEngine(options);
+    }
+
+    public Result<IEnumerable<object>> GetItemsResult(object model, string itemsBinding)
+    {
+        var result = GetValueResult(model, itemsBinding) as IEnumerable<object>;
 
         if (result != null)
         {
@@ -24,7 +39,7 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
         return Result.Fail("Not found");
     }
  
-    public Result<List<object?>> SelectValues(object model, string modelBinding)
+    public Result<List<object?>> SelectValuesResult(object model, string modelBinding)
     {
         if (modelBinding == "")
         {
@@ -48,34 +63,40 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
         return result;
     }
 
-    public Result<object?> GetValue(object model, string modelBinding)
+
+    public object? GetValue(object model, string path)
     {
-        if (modelBinding == "")
+        if (path == "" || path == "$")
         {
             return model;
         }
 
-        var selectResult = SelectLastPropertiesIterateThroughPath(model, modelBinding);
-
-        if (selectResult.IsFailed)
-        {
-            return Result.Fail(selectResult.Errors);
-        }
-
-        if (selectResult.Value == null || !selectResult.Value.Any())
-        {
-            return Result.Ok((object?)null);
-        }
-
-        if (selectResult.Value.Count == 1)
-        {
-            return selectResult.Value.Single().Resolve();
-        }
-
-        return Result.Fail($"Path '{modelBinding}': expected one value but {selectResult.Value.Count} value(s) found");
+        var result = _expressionEngine.ParseJsonPathExpression(model, path);
+        var value = result.GetValue(model);
+        return value;
     }
 
-    public Result SetValue(object model, string modelBinding, object val)
+    public Result<object?> GetValueResult(object model, string path)
+    {
+        try
+        {
+            return GetValue(model, path);
+        }
+        catch (ParserException pex)
+        {
+            return Result.Fail($"Path '{path}': {pex.Message}");
+        }
+        catch (NavigationException nex)
+        {
+            return Result.Fail($"{nex.Message}");
+        }
+        catch (Exception e)
+        {
+            return Result.Fail($"Path '{path}': {e.Message}");
+        }
+    }
+
+    public Result SetValueResult(object model, string modelBinding, object val)
     {
         var selectResult = SelectLastPropertiesIterateThroughPath(model, modelBinding);
 
@@ -368,7 +389,7 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
         else
         {
             // error
-            return Result.Fail($"Path '{modelBinding}': only IDictionary or IList properties are supported");
+            return Result.Fail($"Path '{modelBinding}': only IDictionary or IList collections are supported");
         }
     }
 }
