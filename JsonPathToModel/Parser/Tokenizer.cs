@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Text;
 using static JsonPathToModel.Parser.Tokenizer;
+using JsonPathToModel.Exceptions;
 
 namespace JsonPathToModel.Parser;
 

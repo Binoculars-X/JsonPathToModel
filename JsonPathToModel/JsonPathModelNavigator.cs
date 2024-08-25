@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using FluentResults;
+using JsonPathToModel.Exceptions;
 using JsonPathToModel.Parser;
 
 namespace JsonPathToModel;
@@ -85,30 +86,14 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
         {
             return Result.Fail($"Path '{path}': {pex.Message}");
         }
+        catch (NavigationException nex)
+        {
+            return Result.Fail($"{nex.Message}");
+        }
         catch (Exception e)
         {
             return Result.Fail($"Path '{path}': {e.Message}");
-            //throw;
         }
-
-        //var selectResult = SelectLastPropertiesIterateThroughPath(model, modelBinding);
-
-        //if (selectResult.IsFailed)
-        //{
-        //    return Result.Fail(selectResult.Errors);
-        //}
-
-        //if (selectResult.Value == null || !selectResult.Value.Any())
-        //{
-        //    return Result.Ok((object?)null);
-        //}
-
-        //if (selectResult.Value.Count == 1)
-        //{
-        //    return selectResult.Value.Single().Resolve();
-        //}
-
-        //return Result.Fail($"Path '{path}': expected one value but {selectResult.Value.Count} value(s) found");
     }
 
     public Result SetValueResult(object model, string modelBinding, object val)

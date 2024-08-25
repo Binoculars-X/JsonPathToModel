@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace JsonPathToModel.Parser;
+namespace JsonPathToModel.Exceptions;
 
 public class ParserException : Exception
 {

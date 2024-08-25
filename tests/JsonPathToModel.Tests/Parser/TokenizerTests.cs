@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using JsonPathToModel.Exceptions;
 using JsonPathToModel.Parser;
 
 namespace JsonPathToModel.Tests.Parser;

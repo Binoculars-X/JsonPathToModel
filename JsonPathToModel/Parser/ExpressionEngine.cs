@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using JsonPathToModel.Exceptions;
 
 namespace JsonPathToModel.Parser;
 
@@ -109,14 +110,14 @@ public class ExpressionEngine
     //}
     */
 
-    private ExpressionResult ParseExpression(Type type, string expressionText)
+    private ExpressionResult ParseExpression(Type type, string expression)
     {
         Dictionary<string, ExpressionResult> typeDicitonary;
         ExpressionResult cachedTokenInfo;
 
         if (_expressionCache.TryGetValue(type, out typeDicitonary))
         {
-            if (typeDicitonary.TryGetValue(expressionText, out cachedTokenInfo))
+            if (typeDicitonary.TryGetValue(expression, out cachedTokenInfo))
             {
                 return cachedTokenInfo;
             }
@@ -128,7 +129,7 @@ public class ExpressionEngine
 
         var tokenList = new List<TokenInfo>();
 
-        using (TextReader sr = new StringReader(expressionText))
+        using (TextReader sr = new StringReader(expression))
         {
             var t = new Tokenizer(sr);
             var current = t.Token;
@@ -146,12 +147,12 @@ public class ExpressionEngine
             }
         }
 
-        var result = new ExpressionResult(tokenList, GetStraightEmitterGet(type, tokenList)?.CreateDelegate());
-        _expressionCache[type][expressionText] = result;
+        var result = new ExpressionResult(expression, tokenList, GetStraightEmitterGet(expression, type, tokenList)?.CreateDelegate());
+        _expressionCache[type][expression] = result;
         return result;
     }
 
-    private Emit<Func<object, object>>? GetStraightEmitterGet(Type modelType, List<TokenInfo> tokens)
+    private Emit<Func<object, object>>? GetStraightEmitterGet(string expression, Type modelType, List<TokenInfo> tokens)
     {
         if (!_options.OptimizeWithCodeEmitter || tokens.Any(t => t.Collection != null))
         {
@@ -176,7 +177,7 @@ public class ExpressionEngine
 
             if (propInfo == null)
             {
-                throw new ParserException($"property '{token.Field}' not found");
+                throw new NavigationException($"Path '{expression}': property '{token.Field}' not found");
             }
 
             result.CastClass(currentType);
