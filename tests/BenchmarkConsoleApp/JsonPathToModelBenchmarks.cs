@@ -53,8 +53,12 @@ public class JsonPathToModelBenchmarks
 
     // 28 ns optimized
     // 124 ns not optimized
+    //[Benchmark]
+    //public string JpathLatestSetValue() => JsonPathToModelUsage.JpathLatestSetValue();
+
+    // 155.0 ns
     [Benchmark]
-    public string JpathLatestSetValue() => JsonPathToModelUsage.JpathLatestSetValue();
+    public string JpathLatestGetCollectionValue() => JsonPathToModelUsage.JpathLatestGetCollectionValue();
 
     // 25 ns
     //[Benchmark]

@@ -21,7 +21,7 @@ public class SupportedTypesTests
     }
 
     [Fact]
-    public void Should_Support_AllPrimitiveTypes()
+    public void GetValueResult_Should_Support_AllPrimitiveTypes()
     {
         var test = (IJsonPathModelNavigator navi) => 
         { 

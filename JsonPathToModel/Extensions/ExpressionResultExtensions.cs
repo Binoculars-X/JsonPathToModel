@@ -12,10 +12,15 @@ using System.Text;
 
 namespace JsonPathToModel;
 
-public static class ExpressionResultExtensions
+internal static class ExpressionResultExtensions
 {
-    public static List<object?> SelectValues(this ExpressionResult result, object target)
+    public static List<object?> SelectValues(this ExpressionResult result, object target, NavigatorConfigOptions? options = null)
     {
+        if (options == null)
+        {
+            options = new NavigatorConfigOptions();
+        }
+
         var resultList = new List<object?>();
         var currentValues = new object?[] { target }.ToList();
         var lastToken = result.Tokens.Last();
@@ -28,7 +33,7 @@ public static class ExpressionResultExtensions
             foreach (var currentValue in currentValues)
             {
 
-                var currentResult = ResolveValues(result.Expression, currentValue, result.Tokens[i]);
+                var currentResult = ResolveValues(result.Expression, currentValue, result.Tokens[i], options);
 
                 if (currentResult != null && currentResult.Any())
                 {
@@ -45,7 +50,7 @@ public static class ExpressionResultExtensions
         }
 
         // collect final result
-        if (lastToken.Collection != null)
+        if (lastToken.CollectionDetails != null)
         {
             // assemble all collected items
             foreach (var item in currentValues)
@@ -81,8 +86,13 @@ public static class ExpressionResultExtensions
         return resultList;
     }
 
-    public static void SetValue(this ExpressionResult result, object target, object val)
+    public static void SetValue(this ExpressionResult result, object target, object val, NavigatorConfigOptions? options = null)
     {
+        if (options == null)
+        {
+            options = new NavigatorConfigOptions();
+        }
+
         // If delegate provided
         if (result.SetDelegate != null)
         {
@@ -105,7 +115,7 @@ public static class ExpressionResultExtensions
 
         for (int i = 1; i < result.Tokens.Count-1; i++)
         {
-            currentObject = Resolve(result.Expression, currentObject, result.Tokens[i]);
+            currentObject = Resolve(result.Expression, currentObject, result.Tokens[i], options);
 
             if (currentObject == null)
             {
@@ -152,8 +162,13 @@ public static class ExpressionResultExtensions
         }
     }
 
-    public static object? GetValue(this ExpressionResult result, object target)
+    public static object? GetValue(this ExpressionResult result, object target, NavigatorConfigOptions? options = null)
     {
+        if (options == null)
+        {
+            options = new NavigatorConfigOptions(); 
+        }
+
         // If delegate provided
         if (result.GetDelegate != null)
         {
@@ -179,7 +194,7 @@ public static class ExpressionResultExtensions
 
         for (int i = 1; i < result.Tokens.Count; i++)
         {
-            currentObject = Resolve(result.Expression, currentObject, result.Tokens[i]);
+            currentObject = Resolve(result.Expression, currentObject, result.Tokens[i], options);
 
             if (currentObject == null)
             {
@@ -192,7 +207,7 @@ public static class ExpressionResultExtensions
 
     private static void CheckForNotSinglePath(ExpressionResult result)
     {
-        if (result.Tokens.Take(result.Tokens.Count - 1).Any(t => t.Collection != null && t.Collection.SelectAll))
+        if (result.Tokens.Take(result.Tokens.Count - 1).Any(t => t.CollectionDetails != null && t.CollectionDetails.SelectAll))
         {
             throw new NavigationException($"Path '{result.Expression}': cannot get/set single value in a wild card collection");
         }
@@ -226,11 +241,11 @@ public static class ExpressionResultExtensions
         return resultList;
     }
 
-    private static List<object?>? ResolveValues(string expression, object currentObject, TokenInfo token)
+    private static List<object?>? ResolveValues(string expression, object currentObject, TokenInfo token, NavigatorConfigOptions options)
     {
         var emptyResult = new List<object?>();
 
-        if (token.Collection != null && token.Collection.SelectAll)
+        if (token.CollectionDetails != null && token.CollectionDetails.SelectAll)
         {
             var collection = GetCollectionProperty(expression, currentObject, token);
 
@@ -243,7 +258,7 @@ public static class ExpressionResultExtensions
             return items;
         }
 
-        var value = Resolve(expression, currentObject, token);
+        var value = Resolve(expression, currentObject, token, options);
 
         if (value != null)
         {
@@ -253,11 +268,11 @@ public static class ExpressionResultExtensions
         return emptyResult;
     }
 
-    private static object? Resolve(string expression, object currentObject, TokenInfo token)
+    private static object? Resolve(string expression, object currentObject, TokenInfo token, NavigatorConfigOptions options)
     {
-        if (token.Collection != null)
+        if (token.CollectionDetails != null)
         {
-            if (token.Collection.SelectAll)
+            if (token.CollectionDetails.SelectAll)
             {
                 var collection = GetCollectionProperty(expression, currentObject, token);
 
@@ -268,7 +283,7 @@ public static class ExpressionResultExtensions
 
                 return collection;
             }
-            else if (token.Collection.Literal != "")
+            else if (token.CollectionDetails.Literal != "")
             {
                 var dictionary = GetCollectionProperty(expression, currentObject, token) as IDictionary;
 
@@ -277,12 +292,17 @@ public static class ExpressionResultExtensions
                     return null;
                 }
 
-                if (!dictionary.Contains(token.Collection.Literal))
+                if (!dictionary.Contains(token.CollectionDetails.Literal))
                 {
-                    throw new NavigationException($"Path '{expression}': dictionary key '{token.Collection.Literal}' not found");
+                    if (options.FailOnCollectionKeyNotFound)
+                    {
+                        throw new NavigationException($"Path '{expression}': dictionary key '{token.CollectionDetails.Literal}' not found");
+                    }
+
+                    return null;
                 }
 
-                return dictionary[token.Collection.Literal];
+                return dictionary[token.CollectionDetails.Literal];
             }
 
             var list = GetCollectionProperty(expression, currentObject, token) as IList;
@@ -292,7 +312,16 @@ public static class ExpressionResultExtensions
                 return null;
             }
 
-            return list[token.Collection.Index.Value];
+            var index = token.CollectionDetails.Index!.Value;
+
+            if (!options.FailOnCollectionKeyNotFound && index >= list.Count)
+            {
+                // return null instead of exception if FailOnCollectionKeyNotFound == false
+                return null; 
+            }
+
+            // ToDo: should we re-throw NavigationException instead of ArgumentOutOfRangeException here?
+            return list[index];
         }
 
         var prop = currentObject.GetType().GetProperty(token.Field);

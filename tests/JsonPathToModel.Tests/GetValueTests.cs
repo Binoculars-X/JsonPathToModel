@@ -71,6 +71,25 @@ public class GetValueTests
     }
 
     [Fact]
+    public void GetValue_ShouldNotFail_When_FailOnCollectionKeyNotFound_Disabled()
+    {
+        var model = new SampleModel
+        {
+            Id = "7",
+            Name = "Gerry",
+            NestedDictionary = new Dictionary<string, SampleNested>() { { "key1", new SampleNested { Id = "xyz", Name = "Pedro" } } }
+        };
+
+        var navi = new JsonPathModelNavigator(new NavigatorConfigOptions
+        {
+            OptimizeWithCodeEmitter = true,
+            FailOnCollectionKeyNotFound = false
+        });
+
+        Assert.Null(navi.GetValue(model, "$.NestedDictionary['wrong'].Name"));
+    }
+
+    [Fact]
     public void GetValue_Should_ReturnError_WhenPathHasErrors()
     {
         var model = new SampleModel
@@ -104,6 +123,42 @@ public class GetValueTests
 
         var pex = Assert.Throws<NavigationException>(() => navi.GetValue(model, "$.NestedList[*].Id"));
         Assert.Equal($"Path '$.NestedList[*].Id': cannot get/set single value in a wild card collection", pex.Message);
+    }
+
+    [Fact]
+    public void GetValue_Should_ReturnError_When_WrongIndexSupplied()
+    {
+        var model = new SampleModel
+        {
+            Id = "7",
+            Name = "Gerry",
+            NestedList = new([new SampleNested { Id = "xyz", Name = "Pedro" }, new SampleNested { Id = "xzz", Name = "Antuan" }])
+        };
+
+        var navi = GetNavigator();
+
+        var pex = Assert.Throws<ArgumentOutOfRangeException>(() => navi.GetValue(model, "$.NestedList[2].Id"));
+        //Assert.Equal($"Path '$.NestedList[2].Id': cannot get/set single value in a wild card collection", pex.Message);
+    }
+
+    [Fact]
+    public void GetValue_Should_NotReturnError_When_WrongIndexSupplied_FailOnCollectionKeyNotFound_Disabled()
+    {
+        var model = new SampleModel
+        {
+            Id = "7",
+            Name = "Gerry",
+            NestedList = new([new SampleNested { Id = "xyz", Name = "Pedro" }, new SampleNested { Id = "xzz", Name = "Antuan" }])
+        };
+
+        var navi = new JsonPathModelNavigator(new NavigatorConfigOptions
+        {
+            OptimizeWithCodeEmitter = true,
+            FailOnCollectionKeyNotFound = false
+        });
+
+        var value = navi.GetValue(model, "$.NestedList[2].Id");
+        Assert.Null(value);
     }
 
     [Fact]
@@ -154,7 +209,10 @@ public class GetValueTests
             NestedDictionary = new Dictionary<string, SampleNested>() { { "key1", new SampleNested { Id = "xyz", Name = "Pedro" } } }
         };
 
-        var navi = GetNavigator();
+        var navi = new JsonPathModelNavigator(new NavigatorConfigOptions { 
+            OptimizeWithCodeEmitter = true, 
+            FailOnCollectionKeyNotFound = true 
+        });
 
         var pex = Assert.Throws<NavigationException>(() => navi.GetValue(model, "$.NestedDictionary['wrong'].Id"));
         Assert.Equal("Path '$.NestedDictionary['wrong'].Id': dictionary key 'wrong' not found", pex.Message);

@@ -69,7 +69,7 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
         }
 
         var result = _expressionEngine.ParseJsonPathExpression(model, path);
-        var values = result.SelectValues(model);
+        var values = result.SelectValues(model, _options);
         return values;
     }
 
@@ -81,14 +81,14 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
         }
 
         var result = _expressionEngine.ParseJsonPathExpression(model, path);
-        var value = result.GetValue(model);
+        var value = result.GetValue(model, _options);
         return value;
     }
 
     public void SetValue(object model, string path, object val)
     {
         var result = _expressionEngine.ParseJsonPathExpression(model, path);
-        result.SetValue(model, val);
+        result.SetValue(model, val, _options);
     }
 
     public Result<object?> GetValueResult(object model, string path)

@@ -35,7 +35,7 @@ navi.GetValue(model, "$.Nested[0].Name");
 var resultValues = navi.SelectValues(model, "$.Nested[*].Id");
 navi.SelectValues(model, "$.Nested[*].Name");
 
-var result = navi.SetValue(model, "$.Nested[0].Name", "Abdula");
+navi.SetValue(model, "$.Nested[0].Name", "Abdula");
 ```
 
 **Model:**
@@ -99,17 +99,17 @@ The following collections are supported:
 Examples:
 
 ```
-var result1 = navi.SetValue(model, "$.IntId", 123);
-var result2 = navi.SetValue(model, "$.Nested[1].Id", "456");
-var result3 = navi.SetValue(model, "$.Person.PrimaryContact.Email", new Email("a@a.com"));
-var result4 = navi.SetValue(model, "$.Person.PrimaryContact.Email.Value", "a@a.com");
+navi.SetValue(model, "$.IntId", 123);
+navi.SetValue(model, "$.Nested[1].Id", "456");
+navi.SetValue(model, "$.Person.PrimaryContact.Email", new Email("a@a.com"));
+navi.SetValue(model, "$.Person.PrimaryContact.Email.Value", "a@a.com");
 ```
 If you like what I do and it is helpful, you can give me a cup of coffee :)
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/donate?hosted_button_id=Q7XEPGTBQFWNG)
 
 **Release Notes**
 
-**1.2.0:**
+**1.2.0 - 1.2.3:**
 - Dramatically improved performance
 - Added DI services registration
 - Added Sigil Emitter optimizations for GetValue/SetValue simple expressions like '$.Person.FirstName'

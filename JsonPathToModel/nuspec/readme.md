@@ -35,7 +35,7 @@ navi.GetValue(model, "$.Nested[0].Name");
 var resultValues = navi.SelectValues(model, "$.Nested[*].Id");
 navi.SelectValues(model, "$.Nested[*].Name");
 
-var result = navi.SetValue(model, "$.Nested[0].Name", "Abdula");
+navi.SetValue(model, "$.Nested[0].Name", "Abdula");
 ```
 
 **Model:**
@@ -57,10 +57,10 @@ public class SampleNested
 
 **Release Notes**
 
-**1.2.0:**
+**1.2.0 - 1.2.3:**
 - Dramatically improved performance
 - Added DI services registration
-- Added Sigil Emitter optimizations for GetValue simple expressions like '$.Person.FirstName'
+- Added Sigil Emitter optimizations for GetValue/SetValue simple expressions like '$.Person.FirstName'
 - Added Tokenizer for parsing JSONPath expressions
 - Refactored exceptions
 - -> NETStandard2.1
