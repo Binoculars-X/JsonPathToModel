@@ -5,11 +5,11 @@ using JsonPathToModel.Parser;
 
 namespace JsonPathToModel.Interfaces;
 
-public record ExpressionResult(
+internal record ExpressionResult(
     string Expression,
     List<TokenInfo> Tokens,
     Func<object, object>? GetDelegate,
     Action<object, object>? SetDelegate)
 {
-    public readonly bool ContainsCollections = Tokens.Any(t => t.Collection != null);
+    public readonly bool ContainsCollections = Tokens.Any(t => t.CollectionDetails != null);
 };

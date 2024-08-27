@@ -10,6 +10,7 @@ public class BenchmarkDebug
     [Fact]
     public void DebugBenchmarks()
     {
+        var str = JsonPathToModelUsage.JpathLatestGetCollectionValue();
         JsonPathToModelUsage.JpathLatestSetValue();
     }
 }

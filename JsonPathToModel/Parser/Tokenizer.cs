@@ -8,10 +8,8 @@ using JsonPathToModel.Exceptions;
 
 namespace JsonPathToModel.Parser;
 
-public class Tokenizer
+internal class Tokenizer
 {
-    //private readonly IObjectResolver _resolver;
-    //private readonly HashSet<string> _operators;
     private const char EOF = '\0';
 
 
@@ -29,10 +27,6 @@ public class Tokenizer
 
     public string Field { get; private set; }
     public CollectionDef? Collection { get; private set; }
-    //public string Param { get; private set; }
-    //public decimal Number { get; private set; }
-    //public string StringLiteral { get; private set; }
-    //public string Operator { get; private set; }
 
     public Token Token
     {
@@ -52,7 +46,7 @@ public class Tokenizer
             {
                 Token = Token,
                 Field = Field,
-                Collection = Collection,
+                CollectionDetails = Collection,
                 //Number = Number,
                 //Operator = Operator,
                 //Param = Param,

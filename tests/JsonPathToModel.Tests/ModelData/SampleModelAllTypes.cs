@@ -10,7 +10,7 @@ public class SampleModelAllTypes
 {
     public string Id { get; set; } 
     public string? Name { get; set; }
-    public SampleModelAllTypesNested? Nested { get; set; }
+    public SampleModelAllTypesNested? Nested { get; set; } = new();
     public List<SampleModelAllTypesNested>? NestedList { get; set; } = [];
     public Dictionary<string, SampleModelAllTypesNested>? NestedDictionary { get; set; } = [];
 }

@@ -46,12 +46,14 @@ public static class ReflectionHelper
                 else if (typeof(IList).IsAssignableFrom(prop.PropertyType))
                 {
                     var path = $"{current.Path}.{prop.Name}[*]";
+                    result.Add(path);
                     var type = prop.PropertyType.GenericTypeArguments[0];
                     currentProperties.Add(new Context(path, type));
                 }
                 else if (typeof(IDictionary).IsAssignableFrom(prop.PropertyType))
                 {
                     var path = $"{current.Path}.{prop.Name}[*]";
+                    result.Add(path);
                     var type = prop.PropertyType.GenericTypeArguments[1];
                     currentProperties.Add(new Context(path, type));
                 }

@@ -31,8 +31,8 @@ public class TokenizerTests
         Assert.Equal(Token.Field, tokens[1].Token);
         Assert.Equal(Token.Field, tokens[2].Token);
         Assert.Equal("Person", tokens[1].Field);
-        Assert.Equal(0, tokens[1]?.Collection?.Index);
-        Assert.Equal("", tokens[1]?.Collection?.Literal);
+        Assert.Equal(0, tokens[1]?.CollectionDetails?.Index);
+        Assert.Equal("", tokens[1]?.CollectionDetails?.Literal);
         Assert.Equal("Name", tokens[2].Field);
     }
 
@@ -47,7 +47,7 @@ public class TokenizerTests
         Assert.Equal(Token.Field, tokens[3].Token);
         Assert.Equal(Token.Field, tokens[4].Token);
         Assert.Equal("Person", tokens[2].Field);
-        Assert.Equal("xyz", tokens[2]?.Collection?.Literal);
+        Assert.Equal("xyz", tokens[2]?.CollectionDetails?.Literal);
         Assert.Equal("Name", tokens[3].Field);
         Assert.Equal("Value", tokens[4].Field);
     }
@@ -61,9 +61,9 @@ public class TokenizerTests
         Assert.Equal(Token.Field, tokens[1].Token);
         Assert.Equal(Token.Field, tokens[2].Token);
         Assert.Equal("Person", tokens[1].Field);
-        Assert.Null(tokens[1]?.Collection?.Index);
-        Assert.Equal("", tokens[1]?.Collection?.Literal);
-        Assert.True(tokens[1]?.Collection?.SelectAll);
+        Assert.Null(tokens[1]?.CollectionDetails?.Index);
+        Assert.Equal("", tokens[1]?.CollectionDetails?.Literal);
+        Assert.True(tokens[1]?.CollectionDetails?.SelectAll);
         Assert.Equal("Name", tokens[2].Field);
     }
 
@@ -76,9 +76,9 @@ public class TokenizerTests
         Assert.Equal(Token.Field, tokens[1].Token);
         Assert.Equal(Token.Field, tokens[2].Token);
         Assert.Equal("Person", tokens[1].Field);
-        Assert.Null(tokens[1]?.Collection?.Index);
-        Assert.Equal("", tokens[1]?.Collection?.Literal);
-        Assert.True(tokens[1]?.Collection?.SelectAll);
+        Assert.Null(tokens[1]?.CollectionDetails?.Index);
+        Assert.Equal("", tokens[1]?.CollectionDetails?.Literal);
+        Assert.True(tokens[1]?.CollectionDetails?.SelectAll);
         Assert.Equal("Name", tokens[2].Field);
     }
 

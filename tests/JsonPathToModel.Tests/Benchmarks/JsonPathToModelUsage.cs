@@ -64,6 +64,11 @@ public class JsonPathToModelUsage
         return _navi.GetValue(_model, "$.Person.FirstName").ToString();
     }
 
+    public static string JpathLatestGetCollectionValue()
+    {
+        return _navi.GetValue(_model, "$.Person.Emails[1].Value").ToString();
+    }
+
     public static string JpathLatestSetValue()
     {
         _navi.SetValue(_model, "$.Person.FirstName", "new name");
