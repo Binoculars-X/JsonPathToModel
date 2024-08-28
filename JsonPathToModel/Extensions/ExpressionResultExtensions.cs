@@ -156,6 +156,14 @@ internal static class ExpressionResultExtensions
         {
             property.SetValue(currentObject, val == null ? (int?)null : Convert.ToInt32(val));
         }
+        else if (property.PropertyType == typeof(DateTime))
+        {
+            property.SetValue(currentObject, Convert.ToDateTime(val));
+        }
+        else if (property.PropertyType == typeof(DateTime?))
+        {
+            property.SetValue(currentObject, val == null ? (DateTime?)null : Convert.ToDateTime(val));
+        }
         else
         {
             property.SetValue(currentObject, val);

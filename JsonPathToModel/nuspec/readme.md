@@ -57,11 +57,12 @@ public class SampleNested
 
 **Release Notes**
 
-**1.2.0 - 1.2.3:**
+**1.2.0 - 1.2.4:**
 - Dramatically improved performance
 - Added DI services registration
 - Added Sigil Emitter optimizations for GetValue/SetValue simple expressions like '$.Person.FirstName'
 - Added Tokenizer for parsing JSONPath expressions
+- Added DateTime auto-convert for SetValue, it works only when OptimizeWithCodeEmitter = false
 - Refactored exceptions
 - -> NETStandard2.1
 - ***Breaking changes:*** GetValue now throws exceptions, for Result<> pattern use GetValueResult
