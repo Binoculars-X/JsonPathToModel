@@ -47,10 +47,6 @@ internal class Tokenizer
                 Token = Token,
                 Field = Field,
                 CollectionDetails = Collection,
-                //Number = Number,
-                //Operator = Operator,
-                //Param = Param,
-                //StringLiteral = StringLiteral
             };
         }
     }
@@ -68,10 +64,6 @@ internal class Tokenizer
     {
         Field = null; 
         Collection = null; 
-        //Number = 0; 
-        //Operator = null; 
-        //Param = null; 
-        //StringLiteral = null;
     }
 
     // Read the next token from the input stream
@@ -151,6 +143,56 @@ internal class Tokenizer
         return "";
     }
 
+    private CollectionDef? ReadCollectionDefinition()
+    {
+        bool isCollection = false;
+        int? index = null;
+        string? literal = null;
+
+        if (_currentChar == '[')
+        {
+            isCollection = true;
+            NextChar();
+        }
+
+        index = ReadIntNumber();
+        literal = ReadStringLiteral();
+
+        // Asterisk means all elements
+        if (_currentChar == '*')
+        {
+            if (literal != null && literal != "")
+            {
+                throw new ParserException($"Illigal symbol '{_currentChar}' used with string literal '{literal}', ']' is expected");
+            }
+
+            if (index != null)
+            {
+                throw new ParserException($"Illigal symbol '{_currentChar}' used with index {index}, ']' is expected");
+            }
+
+            literal = "";
+            NextChar();
+        }
+
+        if (_currentChar == ']')
+        {
+            NextChar();
+        }
+        else if (isCollection)
+        {
+            throw new ParserException($"Illigal symbol '{_currentChar}', ']' is expected");
+        }
+
+        if (isCollection)
+        {
+            return new CollectionDef(index, literal);
+        }
+
+        return null;
+    }
+
+
     private string ReadStringLiteral()
     {
         if (_currentChar == '\'')
@@ -192,51 +234,6 @@ internal class Tokenizer
             // Parse it
             var number = int.Parse(sb.ToString(), CultureInfo.InvariantCulture);
             return number;
-        }
-
-        return null;
-    }
-
-    // ToDo: finish
-    private CollectionDef? ReadCollectionDefinition()
-    {
-        bool isCollection = false;
-        int? index = null;
-        string? literal = null;
-
-        if (_currentChar == '[')
-        {
-            isCollection = true;
-            NextChar();
-        }
-
-        index = ReadIntNumber();
-        literal = ReadStringLiteral();
-
-        // Asterisk means all elements
-        if (_currentChar == '*')
-        {
-            if (literal != null && literal != "")
-            {
-                throw new ParserException($"Illigal symbol '{_currentChar}' used with string literal, ']' is expected");
-            }
-
-            literal = "";
-            NextChar();
-        }
-
-        if (_currentChar == ']')
-        {
-            NextChar();
-        }
-        else if (isCollection)
-        {
-            throw new ParserException($"Illigal symbol '{_currentChar}', ']' is expected");
-        }
-
-        if (isCollection)
-        { 
-            return new CollectionDef(index, literal);
         }
 
         return null;

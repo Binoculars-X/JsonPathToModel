@@ -91,7 +91,26 @@ public class TokenizerTests
         Assert.Throws<ParserException>(() => Parse("$.Customer.Person['xyz].Name.Value"));
         Assert.Throws<ParserException>(() => Parse("$.Customer.Person[xyz'].Name.Value"));
         Assert.Throws<ParserException>(() => Parse("$.Customer.Person[1.0].Name.Value"));
+        Assert.Throws<ParserException>(() => Parse("$.Customer.Person['xyz'*].Name.Value"));
         Assert.Throws<ParserException>(() => Parse("$.Customer.Person['''].Name.Value"));
+        Assert.Throws<ParserException>(() => Parse("$.Customer.Person[][]"));
+        Assert.Throws<ParserException>(() => Parse("$.Customer.Person[].[]"));
+        Assert.Throws<ParserException>(() => Parse("$.Customer.Person[]*[]"));
+    }
+
+    [Fact]
+    public void Tokenizer_Should_Error_WhenFieldCollectionField()
+    {
+        Assert.Throws<ParserException>(() => Parse("$.Customer.Person[]Person[]"));
+    }
+
+    [Fact]
+    public void Tokenizer_Should_Error_WhenAsteriskExpressionWrong()
+    {
+        Assert.Throws<ParserException>(() => Parse("$.Customer.Person[1*].Name.Value"));
+        Assert.Throws<ParserException>(() => Parse("$.Customer.Person['xyz'*].Name.Value"));
+        var tokens = Parse("$.Customer.Person['xyz*'].Name.Value");
+        Assert.Equal("xyz*", tokens[2].CollectionDetails!.Literal);
     }
 
     [Fact]
