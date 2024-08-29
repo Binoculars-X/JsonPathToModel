@@ -120,6 +120,7 @@ public class TokenizerTests
     {
         Assert.Throws<ParserException>(() => Parse("$.Customer.Person[1*].Name.Value"));
         Assert.Throws<ParserException>(() => Parse("$.Customer.Person['xyz'*].Name.Value"));
+
         var tokens = Parse("$.Customer.Person['xyz*'].Name.Value");
         Assert.Equal("xyz*", tokens[2].CollectionDetails!.Literal);
     }
