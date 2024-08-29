@@ -94,11 +94,12 @@ internal static class ExpressionResultExtensions
         }
 
         // If delegate provided
-        if (result.SetDelegate != null)
+        if (result.SetDelegateDetails != null)
         {
             try
             {
-                result.SetDelegate(target, val);
+                var typedValue = TryConvertToTargetType(result.SetDelegateDetails.TargetProperty, val);
+                result.SetDelegateDetails.SetDelegate(target, typedValue);
                 return;
             }
             catch (NullReferenceException)
@@ -140,34 +141,45 @@ internal static class ExpressionResultExtensions
             // ToDo: this should be tested
             (currentObject as ExpandoObject)!.SetValue(property.Name, val);
         }
-        else if (property.PropertyType == typeof(int))
+        else
         {
-            property.SetValue(currentObject, Convert.ToInt32(val));
+            property.SetValue(currentObject,TryConvertToTargetType(property, val));
+        }
+    }
+
+    static object? TryConvertToTargetType(PropertyInfo property, object? val)
+    {
+        if (val == null || property.PropertyType == val.GetType())
+        {
+            return val;
+        }
+
+        if (property.PropertyType == typeof(int))
+        {
+            return Convert.ToInt32(val);
         }
         else if (property.PropertyType == typeof(decimal))
         {
-            property.SetValue(currentObject, Convert.ToDecimal(val));
+            return Convert.ToDecimal(val);
         }
         else if (property.PropertyType == typeof(decimal?))
         {
-            property.SetValue(currentObject, val == null ? (decimal?)null : Convert.ToDecimal(val));
+            return val == null ? (decimal?)null : Convert.ToDecimal(val);
         }
         else if (property.PropertyType == typeof(int?))
         {
-            property.SetValue(currentObject, val == null ? (int?)null : Convert.ToInt32(val));
+            return val == null ? (int?)null : Convert.ToInt32(val);
         }
         else if (property.PropertyType == typeof(DateTime))
         {
-            property.SetValue(currentObject, Convert.ToDateTime(val));
+            return Convert.ToDateTime(val);
         }
         else if (property.PropertyType == typeof(DateTime?))
         {
-            property.SetValue(currentObject, val == null ? (DateTime?)null : Convert.ToDateTime(val));
+            return val == null ? (DateTime?)null : Convert.ToDateTime(val);
         }
-        else
-        {
-            property.SetValue(currentObject, val);
-        }
+            
+        return val;
     }
 
     public static object? GetValue(this ExpressionResult result, object target, NavigatorConfigOptions? options = null)

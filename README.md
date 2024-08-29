@@ -109,6 +109,9 @@ If you like what I do and it is helpful, you can give me a cup of coffee :)
 
 **Release Notes**
 
+**1.2.5**
+- fixed bug in auto-convert for SetValue, it works now when OptimizeWithCodeEmitter = true too
+
 **1.2.0 - 1.2.4:**
 - Dramatically improved performance
 - Added DI services registration

@@ -66,19 +66,21 @@ internal class ExpressionEngine
         var result = new ExpressionResult(expression, 
             tokenList, 
             GetStraightEmitterGet(expression, type, tokenList)?.CreateDelegate(),
-            GetStraightEmitterSet(expression, type, tokenList)?.CreateDelegate());
+            GetStraightEmitterSetDetails(expression, type, tokenList));
 
         _expressionCache[type][expression] = result;
         return result;
     }
 
-    private Emit<Action<object, object>>? GetStraightEmitterSet(string expression, Type modelType, List<TokenInfo> tokens)
+    private SetDelegateDetails? GetStraightEmitterSetDetails(string expression, Type modelType, List<TokenInfo> tokens)
     {
+        SetDelegateDetails? resultDetails = null;
+
         if (!_options.OptimizeWithCodeEmitter || tokens.Any(t => t.CollectionDetails != null))
         {
             // only if OptimizeWithCodeEmitter option is enabled
             // collections not supported yet
-            return null;
+            return resultDetails;
         }
 
         Emit<Action<object, object>> result;
@@ -127,8 +129,8 @@ internal class ExpressionEngine
 
         result.Call(propInfo.GetSetMethod(true)!);
 
-        result.Return();
-        return result;
+        resultDetails = new SetDelegateDetails(propInfo, result.Return().CreateDelegate());
+        return resultDetails;
     }
 
     private Emit<Func<object, object>>? GetStraightEmitterGet(string expression, Type modelType, List<TokenInfo> tokens)

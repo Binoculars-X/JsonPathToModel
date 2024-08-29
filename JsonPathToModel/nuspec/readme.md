@@ -57,6 +57,9 @@ public class SampleNested
 
 **Release Notes**
 
+**1.2.5**
+- fixed bug in auto-convert for SetValue, it works now when OptimizeWithCodeEmitter = true too
+
 **1.2.0 - 1.2.4:**
 - Dramatically improved performance
 - Added DI services registration
