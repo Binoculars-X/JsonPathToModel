@@ -96,6 +96,17 @@ public class TokenizerTests
         Assert.Throws<ParserException>(() => Parse("$.Customer.Person[][]"));
         Assert.Throws<ParserException>(() => Parse("$.Customer.Person[].[]"));
         Assert.Throws<ParserException>(() => Parse("$.Customer.Person[]*[]"));
+        Assert.Throws<ParserException>(() => Parse("$.Customer.Person]["));
+        Assert.Throws<ParserException>(() => Parse("$.[Customer].[Person][]"));
+        Assert.Throws<ParserException>(() => Parse("$.[]"));
+        Assert.Throws<ParserException>(() => Parse("$[]"));
+        Assert.Throws<ParserException>(() => Parse("$.['Person']"));
+    }
+
+    [Fact]
+    public void Tokenizer_Should_Error_WhenFieldAfterDollar()
+    {
+        Assert.Throws<ParserException>(() => Parse("$Person")); 
     }
 
     [Fact]

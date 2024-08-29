@@ -87,6 +87,12 @@ internal class Tokenizer
                 _currentToken = Token.Dollar;
                 _isPreviousDot = false;
                 NextChar();
+
+                if (_currentChar != '.')
+                {
+                    throw new ParserException($"Illigal characters '{_currentChar}', '.' is expected");
+                }
+
                 return;
 
         }
@@ -182,6 +188,11 @@ internal class Tokenizer
         else if (isCollection)
         {
             throw new ParserException($"Illigal symbol '{_currentChar}', ']' is expected");
+        }
+
+        if (_currentChar != '.' && _currentChar != EOF)
+        {
+            throw new ParserException($"Illigal symbol '{_currentChar}' used after collection, '.' or EOF is expected");
         }
 
         if (isCollection)
