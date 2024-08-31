@@ -4,6 +4,7 @@
     <TargetFramework>NETStandard2.1</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AssemblyVersion>1.2.6.0</AssemblyVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -23,6 +24,10 @@
     <PackageReference Include="Portable.System.DateTimeOnly" Version="8.0.1" />
     <PackageReference Include="Sigil" Version="5.0.0" />
     <PackageReference Include="System.Text.Json" Version="8.0.4" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
 
 </Project>

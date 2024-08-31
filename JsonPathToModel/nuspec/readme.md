@@ -57,6 +57,9 @@ public class SampleNested
 
 **Release Notes**
 
+**1.2.6**
+- fixed a few bugs in tokenizer
+
 **1.2.5**
 - fixed bug in auto-convert for SetValue, it works now when OptimizeWithCodeEmitter = true too
 
