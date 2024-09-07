@@ -9,6 +9,8 @@ namespace JsonPathToModel.Tests.ModelData;
 public class SampleModelAllTypes
 {
     public string Id { get; set; } 
+    public bool Bool { get; set; } 
+    public bool? BoolNullable { get; set; } 
     public string? Name { get; set; }
     public SampleModelAllTypesNested? Nested { get; set; } = new();
     public List<SampleModelAllTypesNested>? NestedList { get; set; } = [];

@@ -109,6 +109,10 @@ If you like what I do and it is helpful, you can give me a cup of coffee :)
 
 **Release Notes**
 
+**1.3.0 - 1.3.2**
+- fixed few bugs
+- extended ReflectionHelper to support JsonIgnore
+
 **1.2.6**
 - fixed a few bugs in tokenizer
 

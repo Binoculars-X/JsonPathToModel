@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace JsonPathToModel;
@@ -25,6 +26,11 @@ public static class ReflectionHelper
 
             foreach (var prop in current.Properties)
             {
+                if (prop.GetCustomAttribute<JsonIgnoreAttribute>() != null)
+                { 
+                    continue;
+                }
+
                 if (prop.IsPrimitive())
                 {
                     result.Add($"{current.Path}.{prop.Name}");
@@ -48,7 +54,11 @@ public static class ReflectionHelper
                     var path = $"{current.Path}.{prop.Name}[*]";
                     result.Add(path);
                     var type = prop.PropertyType.GenericTypeArguments[0];
-                    currentProperties.Add(new Context(path, type));
+
+                    if (!type.IsPrimitive())
+                    {
+                        currentProperties.Add(new Context(path, type));
+                    }
                 }
                 else if (typeof(IDictionary).IsAssignableFrom(prop.PropertyType))
                 {

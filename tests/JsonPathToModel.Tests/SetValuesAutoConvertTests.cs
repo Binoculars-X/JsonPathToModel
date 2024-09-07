@@ -22,6 +22,14 @@ public class SetValuesAutoConvertTests
         var test = (IJsonPathModelNavigator navi) =>
         {
             var data = new SampleModelAllTypes();
+
+            navi.SetValue(data, "$.Bool", "True");
+            Assert.Equal(data.Bool, navi.GetValue(data, "$.Bool"));
+            navi.SetValue(data, "$.BoolNullable", "True");
+            Assert.Equal(data.BoolNullable, navi.GetValue(data, "$.BoolNullable"));
+            navi.SetValue(data, "$.BoolNullable", null);
+            Assert.Equal(data.BoolNullable, navi.GetValue(data, "$.BoolNullable"));
+
             navi.SetValue(data, "$.Nested.DateTime", "2010-05-01");
             Assert.Equal(data.Nested.DateTime, navi.GetValue(data, "$.Nested.DateTime"));
 
