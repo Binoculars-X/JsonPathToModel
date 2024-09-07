@@ -41,4 +41,32 @@ public class ReflectionHelperTests
         Assert.Contains("$.NestedList[*]", list);
         Assert.Contains("$.NestedDictionary[*]", list);
     }
+
+    [Fact]
+    public void ReflectionHelper_Ignores_MarkedJsonIgnore()
+    {
+        var list = ReflectionHelper.GetTypeNestedPropertyJsonPaths(typeof(SampleModel));
+        Assert.NotNull(list);
+        Assert.DoesNotContain("$.NestedIgnored.Id", list);
+        Assert.DoesNotContain("$.NestedIgnored.Name", list);
+    }
+
+    [Fact]
+    public void ReflectionHelper_Ignores_NullableHasValue()
+    {
+        var list = ReflectionHelper.GetTypeNestedPropertyJsonPaths(typeof(SampleModel));
+        Assert.NotNull(list);
+        Assert.DoesNotContain("$.NullableDateTime.Value", list);
+        Assert.DoesNotContain("$.NullableDateTime.HasValue", list);
+        Assert.DoesNotContain("$.NullableInt.HasValue", list);
+        Assert.DoesNotContain("$.NullableInt.Value", list);
+    }
+
+    [Fact]
+    public void ReflectionHelper_Ignores_CharsAndLength()
+    {
+        var list = ReflectionHelper.GetTypeNestedPropertyJsonPaths(typeof(SampleModel));
+        Assert.NotNull(list);
+        Assert.False(list.Any(x => x.EndsWith(".Chars") || x.EndsWith(".Length")));
+    }
 }

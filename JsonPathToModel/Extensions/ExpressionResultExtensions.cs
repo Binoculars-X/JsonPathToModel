@@ -178,6 +178,14 @@ internal static class ExpressionResultExtensions
         {
             return val == null ? (DateTime?)null : Convert.ToDateTime(val);
         }
+        else if (property.PropertyType == typeof(bool))
+        {
+            return Convert.ToBoolean(val);
+        }
+        else if (property.PropertyType == typeof(bool?))
+        {
+            return val == null ? (bool?)null : Convert.ToBoolean(val);
+        }
             
         return val;
     }
