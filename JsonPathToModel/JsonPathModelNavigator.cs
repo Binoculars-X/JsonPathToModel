@@ -29,6 +29,12 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
         _expressionEngine = new ExpressionEngine(options);
     }
 
+    public PropertyInfo? GetPropertyInfo(Type modelType, string path)
+    {
+        var result = _expressionEngine.ParseJsonPathExpression(modelType, path);
+        return result.GetPropertyInfo(modelType);
+    }
+
     public Result<IEnumerable<object>> GetItemsResult(object model, string itemsBinding)
     {
         var result = GetValueResult(model, itemsBinding) as IEnumerable<object>;

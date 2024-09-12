@@ -190,6 +190,27 @@ internal static class ExpressionResultExtensions
         return val;
     }
 
+    public static PropertyInfo? GetPropertyInfo(this ExpressionResult result, Type targetType)
+    {
+        CheckForNotSinglePath(result);
+
+        var currentType = targetType;
+        PropertyInfo? propertyInfo = null;
+
+        for (int i = 1; i < result.Tokens.Count; i++)
+        {
+            propertyInfo = currentType.GetProperty(result.Tokens[i].Field);
+            currentType = propertyInfo.PropertyType;
+
+            //if (currentObject == null)
+            //{
+            //    return null;
+            //}
+        }
+
+        return propertyInfo;
+    }
+
     public static object? GetValue(this ExpressionResult result, object target, NavigatorConfigOptions? options = null)
     {
         if (options == null)

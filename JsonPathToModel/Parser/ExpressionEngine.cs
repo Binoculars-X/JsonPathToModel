@@ -22,7 +22,7 @@ internal class ExpressionEngine
     public ExpressionResult ParseJsonPathExpression(object target, string path)
     {
         // 1. read all tokens and build initial tree
-        var exprResult = ParseExpression(target.GetType(), path);
+        var exprResult = ParseExpression(target is Type ? (Type)target : target.GetType(), path);
         return exprResult;
     }
  
