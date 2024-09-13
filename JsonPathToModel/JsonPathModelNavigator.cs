@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using FluentResults;
 using JsonPathToModel.Exceptions;
 using JsonPathToModel.Parser;
-using JsonPathToModel.Interfaces;
 
 namespace JsonPathToModel;
 
@@ -27,6 +26,12 @@ public class JsonPathModelNavigator : IJsonPathModelNavigator
     {
         _options = options;
         _expressionEngine = new ExpressionEngine(options);
+    }
+
+    public PropertyInfo? GetPropertyInfo(Type modelType, string path)
+    {
+        var result = _expressionEngine.ParseJsonPathExpression(modelType, path);
+        return result.GetPropertyInfo(modelType);
     }
 
     public Result<IEnumerable<object>> GetItemsResult(object model, string itemsBinding)

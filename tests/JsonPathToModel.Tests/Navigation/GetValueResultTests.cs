@@ -86,22 +86,26 @@ public class GetValueResultTests
         var path = "$.WrongProperty";
         var result = navi.GetValueResult(model, path);
         Assert.True(result.IsFailed);
-        Assert.Equal($"Path '{path}': property 'WrongProperty' not found", result.Errors.Single().Message);
+        Assert.Contains($"Path '{path}'", result.Errors.Single().Message);
+        Assert.Contains($"'WrongProperty' not found", result.Errors.Single().Message);
 
         path = "$.WrongProperty.WrongSubProperty";
         result = navi.GetValueResult(model, path);
         Assert.True(result.IsFailed);
-        Assert.Equal($"Path '{path}': property 'WrongProperty' not found", result.Errors.Single().Message);
+        Assert.Contains($"Path '{path}'", result.Errors.Single().Message);
+        Assert.Contains($"'WrongProperty' not found", result.Errors.Single().Message);
 
         path = "$.NestedList[0].WrongSubProperty";
         result = navi.GetValueResult(model, path);
         Assert.True(result.IsFailed);
-        Assert.Equal($"Path '{path}': property 'WrongSubProperty' not found", result.Errors.Single().Message);
+        Assert.Contains($"Path '{path}'", result.Errors.Single().Message);
+        Assert.Contains($"'WrongSubProperty' not found", result.Errors.Single().Message);
 
         path = "$.WrongProperty.NestedList[0].Id";
         result = navi.GetValueResult(model, path);
         Assert.True(result.IsFailed);
-        Assert.Equal($"Path '{path}': property 'WrongProperty' not found", result.Errors.Single().Message);
+        Assert.Contains($"Path '{path}'", result.Errors.Single().Message);
+        Assert.Contains($"'WrongProperty' not found", result.Errors.Single().Message);
 
         path = "$.NestedList[100].Id";
         result = navi.GetValueResult(model, path);

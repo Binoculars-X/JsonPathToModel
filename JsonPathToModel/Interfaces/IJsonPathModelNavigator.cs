@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -9,6 +10,7 @@ namespace JsonPathToModel;
 
 public interface IJsonPathModelNavigator
 {
+    PropertyInfo? GetPropertyInfo(Type modelType, string path);
     object? GetValue(object model, string path);
     void SetValue(object model, string path, object? val);
     List<object?> SelectValues(object model, string path);

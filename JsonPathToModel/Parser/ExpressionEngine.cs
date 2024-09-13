@@ -5,12 +5,12 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using JsonPathToModel.Exceptions;
-using JsonPathToModel.Interfaces;
 
 namespace JsonPathToModel.Parser;
 
 internal class ExpressionEngine
 {
+    private static BindingFlags _visibilityAll = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public;
     private readonly NavigatorConfigOptions _options;
     private readonly Dictionary<Type, Dictionary<string, ExpressionResult>> _expressionCache = [];
 
@@ -22,7 +22,7 @@ internal class ExpressionEngine
     public ExpressionResult ParseJsonPathExpression(object target, string path)
     {
         // 1. read all tokens and build initial tree
-        var exprResult = ParseExpression(target.GetType(), path);
+        var exprResult = ParseExpression(target is Type ? (Type)target : target.GetType(), path);
         return exprResult;
     }
  
@@ -94,11 +94,20 @@ internal class ExpressionEngine
         {
             var token = tokens[i];
 
-            propInfo = currentType.GetProperty(token.Field);
+            propInfo = currentType.GetProperty(token.Field, _visibilityAll);
 
             if (propInfo == null)
             {
-                throw new NavigationException($"Path '{expression}': property '{token.Field}' not found");
+                var fieldInfo = currentType.GetField(token.Field, _visibilityAll);
+
+                if (fieldInfo == null)
+                {
+                    throw new NavigationException($"Path '{expression}': property or field '{token.Field}' not found");
+                }
+
+                // ToDo: fields not supported
+                // https://stackoverflow.com/questions/16073091/is-there-a-way-to-create-a-delegate-to-get-and-set-values-for-a-fieldinfo
+                return null;
             }
 
             result.CastClass(currentType);
@@ -114,7 +123,20 @@ internal class ExpressionEngine
         }
 
         result.CastClass(currentType);
-        propInfo = currentType.GetProperty(tokens.Last().Field!);
+        propInfo = currentType.GetProperty(tokens.Last().Field!, _visibilityAll);
+
+        if (propInfo == null)
+        {
+            var fieldInfo = currentType.GetField(tokens.Last().Field, _visibilityAll);
+
+            if (fieldInfo == null)
+            {
+                throw new NavigationException($"Path '{expression}': property or field '{tokens.Last().Field}' not found");
+            }
+
+            // ToDo: fields not supported
+            return null;
+        }
 
         result.LoadArgument(1);
 
@@ -154,23 +176,33 @@ internal class ExpressionEngine
                 continue;
             }
 
-            var propInfo = currentType.GetProperty(token.Field);
+            var propInfo = currentType.GetProperty(token.Field, _visibilityAll);
 
             if (propInfo == null)
             {
-                throw new NavigationException($"Path '{expression}': property '{token.Field}' not found");
+                var fieldInfo = currentType.GetField(token.Field, _visibilityAll);
+
+                if (fieldInfo == null)
+                {
+                    throw new NavigationException($"Path '{expression}': property or field '{token.Field}' not found");
+                }
+
+                // ToDo: fields not supported
+                return null;
             }
-
-            result.CastClass(currentType);
-            result.Call(propInfo.GetGetMethod(true)!);
-
-            using (var a = result.DeclareLocal(propInfo.PropertyType))
+            else
             {
-                result.StoreLocal(a);
-                result.LoadLocal(a);
-            }
+                result.CastClass(currentType);
+                result.Call(propInfo.GetGetMethod(true)!);
 
-            currentType = propInfo.PropertyType;
+                using (var a = result.DeclareLocal(propInfo.PropertyType))
+                {
+                    result.StoreLocal(a);
+                    result.LoadLocal(a);
+                }
+
+                currentType = propInfo.PropertyType;
+            }
         }
 
         if (currentType.IsBoxable())

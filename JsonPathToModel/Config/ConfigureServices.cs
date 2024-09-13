@@ -11,6 +11,7 @@ public static class ConfigureServices
     public static IServiceCollection AddJsonPathToModel(this IServiceCollection services)
     {
         services.TryAddSingleton<IJsonPathModelNavigator>(new JsonPathModelNavigator());
+        services.TryAddSingleton<IModelStateExplorer>(new ModelStateExplorer());
         return services;
     }
     public static IServiceCollection AddJsonPathToModel(this IServiceCollection services, Action<NavigatorConfigOptions> configure)
@@ -18,6 +19,7 @@ public static class ConfigureServices
         var options = new NavigatorConfigOptions();
         configure(options);
         services.TryAddSingleton<IJsonPathModelNavigator>(new JsonPathModelNavigator(options));
+        services.TryAddSingleton<IModelStateExplorer>(new ModelStateExplorer());
         return services;
     }
 }

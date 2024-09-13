@@ -5,6 +5,7 @@ using JsonPathToModel.Tests.ModelData;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -86,7 +87,8 @@ public class SetValueTests
         var navi = GetNavigator();
 
         var pex = Assert.Throws<NavigationException>(() => navi.SetValue(model, "$.WrongId", "new id"));
-        Assert.Equal($"Path '$.WrongId': property not found or SetMethod is null", pex.Message);
+        Assert.Contains("Path '$.WrongId'", pex.Message);
+        Assert.Contains("not found or SetMethod is null", pex.Message);
     }
 
     [Fact]
