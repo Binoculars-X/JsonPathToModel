@@ -4,13 +4,12 @@ using System.Reflection;
 using System.Text;
 using JsonPathToModel.Parser;
 
-namespace JsonPathToModel.Interfaces;
+namespace JsonPathToModel;
 
 internal record ExpressionResult(
     string Expression,
     List<TokenInfo> Tokens,
     Func<object, object>? GetDelegate,
-    //Action<object, object>? SetDelegate
     SetDelegateDetails? SetDelegateDetails
     )
 {

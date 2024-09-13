@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using FluentResults;
 using JsonPathToModel.Exceptions;
 using JsonPathToModel.Parser;
-using JsonPathToModel.Interfaces;
 
 namespace JsonPathToModel;
 

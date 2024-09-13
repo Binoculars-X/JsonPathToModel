@@ -1,6 +1,5 @@
 ﻿using FluentResults;
 using JsonPathToModel.Exceptions;
-using JsonPathToModel.Interfaces;
 using JsonPathToModel.Parser;
 using System;
 using System.Collections;
@@ -14,6 +13,8 @@ namespace JsonPathToModel;
 
 internal static class ExpressionResultExtensions
 {
+    private static BindingFlags _visibilityAll = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public;
+
     public static List<object?> SelectValues(this ExpressionResult result, object target, NavigatorConfigOptions? options = null)
     {
         if (options == null)
@@ -98,7 +99,7 @@ internal static class ExpressionResultExtensions
         {
             try
             {
-                var typedValue = TryConvertToTargetType(result.SetDelegateDetails.TargetProperty, val);
+                var typedValue = TryConvertToTargetType(result.SetDelegateDetails.TargetProperty.PropertyType, val);
                 result.SetDelegateDetails.SetDelegate(target, typedValue);
                 return;
             }
@@ -123,17 +124,21 @@ internal static class ExpressionResultExtensions
                 throw new NavigationException($"Path '{result.Expression}': SetValue cannot set as {result.Tokens[i].Field} is null"); ;
             }
         }
-
-        var property = currentObject.GetType().GetProperty(result.Tokens.Last().Field);
-
-        //if ((property as ICollection) != null)
-        //{
-        //    throw new NavigationException($"Path '{result.Expression}': SetValue replacing a collection is not supported");
-        //}
-
+        
+        var name = result.Tokens.Last().Field;
+        var property = currentObject.GetType().GetProperty(name, _visibilityAll);
+        
         if (property == null || currentObject == null || property.SetMethod == null)
         {
-            throw new NavigationException($"Path '{result.Expression}': property not found or SetMethod is null");
+            var field = currentObject.GetType().GetField(name, _visibilityAll);
+
+            if (field == null)
+            {
+                throw new NavigationException($"Path '{result.Expression}': property or field '{name}' not found or SetMethod is null");
+            }
+
+            field.SetValue(currentObject, TryConvertToTargetType(field.FieldType, val));
+            return;
         }
 
         if (currentObject.GetType() == typeof(ExpandoObject))
@@ -143,46 +148,46 @@ internal static class ExpressionResultExtensions
         }
         else
         {
-            property.SetValue(currentObject,TryConvertToTargetType(property, val));
+            property.SetValue(currentObject, TryConvertToTargetType(property.PropertyType, val));
         }
     }
 
-    static object? TryConvertToTargetType(PropertyInfo property, object? val)
+    static object? TryConvertToTargetType(Type type, object? val)
     {
-        if (val == null || property.PropertyType == val.GetType())
+        if (val == null || type == val.GetType())
         {
             return val;
         }
 
-        if (property.PropertyType == typeof(int))
+        if (type == typeof(int))
         {
             return Convert.ToInt32(val);
         }
-        else if (property.PropertyType == typeof(decimal))
+        else if (type == typeof(decimal))
         {
             return Convert.ToDecimal(val);
         }
-        else if (property.PropertyType == typeof(decimal?))
+        else if (type == typeof(decimal?))
         {
             return val == null ? (decimal?)null : Convert.ToDecimal(val);
         }
-        else if (property.PropertyType == typeof(int?))
+        else if (type == typeof(int?))
         {
             return val == null ? (int?)null : Convert.ToInt32(val);
         }
-        else if (property.PropertyType == typeof(DateTime))
+        else if (type == typeof(DateTime))
         {
             return Convert.ToDateTime(val);
         }
-        else if (property.PropertyType == typeof(DateTime?))
+        else if (type == typeof(DateTime?))
         {
             return val == null ? (DateTime?)null : Convert.ToDateTime(val);
         }
-        else if (property.PropertyType == typeof(bool))
+        else if (type == typeof(bool))
         {
             return Convert.ToBoolean(val);
         }
-        else if (property.PropertyType == typeof(bool?))
+        else if (type == typeof(bool?))
         {
             return val == null ? (bool?)null : Convert.ToBoolean(val);
         }
@@ -201,11 +206,6 @@ internal static class ExpressionResultExtensions
         {
             propertyInfo = currentType.GetProperty(result.Tokens[i].Field);
             currentType = propertyInfo.PropertyType;
-
-            //if (currentObject == null)
-            //{
-            //    return null;
-            //}
         }
 
         return propertyInfo;
@@ -372,12 +372,19 @@ internal static class ExpressionResultExtensions
             // ToDo: should we re-throw NavigationException instead of ArgumentOutOfRangeException here?
             return list[index];
         }
-
-        var prop = currentObject.GetType().GetProperty(token.Field);
+        
+        var prop = currentObject.GetType().GetProperty(token.Field, _visibilityAll);
 
         if (prop == null)
         {
-            throw new NavigationException($"Path '{expression}': property '{token.Field}' not found");
+            var field = currentObject.GetType().GetField(token.Field, _visibilityAll);
+
+            if (field == null)
+            {
+                throw new NavigationException($"Path '{expression}': property or field '{token.Field}' not found");
+            }
+
+            return field.GetValue(currentObject);
         }
 
         return prop.GetValue(currentObject);

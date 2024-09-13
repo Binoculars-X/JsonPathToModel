@@ -57,6 +57,12 @@ public class SampleNested
 
 **Release Notes**
 
+**1.5.0+**
+- added ModelStateExplorer to create JsonPath for type properties and fields
+- added support of fields
+- added support of nonpublics
+- added ModelSnapshot to extract model state into a serializable form
+
 **1.3.0 - 1.3.2**
 - fixed few bugs
 - extended ReflectionHelper to support JsonIgnore
