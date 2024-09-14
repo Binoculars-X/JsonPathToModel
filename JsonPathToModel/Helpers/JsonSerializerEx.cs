@@ -25,7 +25,7 @@ public static class JsonSerializerEx
     }
 
     private static Type FindType(string typeName)
-    {
+    {   
         Type type;
 
         if (_types.TryGetValue(typeName, out type))

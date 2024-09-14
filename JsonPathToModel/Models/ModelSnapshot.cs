@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
@@ -13,7 +14,7 @@ namespace JsonPathToModel;
 /// </summary>
 public class ModelSnapshot
 {
-    public Dictionary<string, SnapshotRecord> Records { get; set; } = [];
+    public ConcurrentDictionary<string, SnapshotRecord> Records { get; set; } = [];
 
     public void Clear()
     {
