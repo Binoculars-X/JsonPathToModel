@@ -1,4 +1,5 @@
-﻿using JsonPathToModel.Helpers;
+﻿using Castle.DynamicProxy;
+using JsonPathToModel.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,8 +11,10 @@ using System.Threading.Tasks;
 
 namespace JsonPathToModel.Tests.Helpers;
 
-public class ModelSnapshotTests
+public partial class ModelSnapshotTests
 {
+    private readonly ImportOptions _importOptions = new ImportOptions { ExcludeStartsWith = "__" };
+
     [Fact]
     public void ModelSnapshot_Should_Import_PrimitiveValues()
     {
@@ -159,6 +162,30 @@ public class ModelSnapshotTests
         Assert.Equal(target.StringProp, target2.StringProp);
     }
 
+    public class SampleReadonlyFieldsModel
+    {
+        private readonly DateTime? _modelDate;
+        protected int? _modelInt;
+        internal string? _modelString { get; set; }
+
+        public DateTime? AccessorModelDate { get { return _modelDate; } }
+        public int? AccessorModelInt { get { return _modelInt; } }
+        public string? AccessorModelString { get { return _modelString; } }
+    }
+
+    [Fact]
+    public void ModelSnapshot_Should_Not_Import_ReadOnly()
+    {
+        var date = new DateTime(1970, 10, 19);
+        var model = new ModelSnapshot();
+
+        var target = new SampleReadonlyFieldsModel();
+
+        model.ImportFrom(target, _importOptions);
+        Assert.False(model.Records.ContainsKey("$._modelDate"));
+        Assert.Equal(2, model.Records.Count());
+    }
+
     public class SampleTarget
     {
         public DateTime? ModelDate { get; set; }
@@ -212,6 +239,9 @@ public class ModelSnapshotTests
         public string? Id { get { return _Id; } }
         public string? StringProp { get { return _stringProp; } }
     }
+
+    
+   
 }
 
 

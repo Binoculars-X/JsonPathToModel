@@ -5,6 +5,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using JsonPathToModel.Exceptions;
+using System.Collections.Concurrent;
 
 namespace JsonPathToModel.Parser;
 
@@ -12,7 +13,7 @@ internal class ExpressionEngine
 {
     private static BindingFlags _visibilityAll = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public;
     private readonly NavigatorConfigOptions _options;
-    private readonly Dictionary<Type, Dictionary<string, ExpressionResult>> _expressionCache = [];
+    private readonly ConcurrentDictionary<Type, ConcurrentDictionary<string, ExpressionResult>> _expressionCache = [];
 
     public ExpressionEngine(NavigatorConfigOptions? options = null)
     {
@@ -28,7 +29,7 @@ internal class ExpressionEngine
  
     private ExpressionResult ParseExpression(Type type, string expression)
     {
-        Dictionary<string, ExpressionResult> typeDicitonary;
+        ConcurrentDictionary<string, ExpressionResult> typeDicitonary;
         ExpressionResult cachedTokenInfo;
 
         if (_expressionCache.TryGetValue(type, out typeDicitonary))

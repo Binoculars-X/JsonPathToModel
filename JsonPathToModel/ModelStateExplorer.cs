@@ -32,7 +32,7 @@ public class ModelStateExplorer : IModelStateExplorer
 
         var fields = modelType.GetFields(bindings)
             // igonore generated property back fields
-            .Where(f => !f.Name.StartsWith("<") && f.GetCustomAttribute<JsonIgnoreAttribute>() == null)
+            .Where(f => !f.Name.StartsWith("<") && f.GetCustomAttribute<JsonIgnoreAttribute>() == null && !f.IsInitOnly)
             .ToList();
         
         // include only properties with setters
