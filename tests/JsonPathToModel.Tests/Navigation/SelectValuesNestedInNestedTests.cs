@@ -18,12 +18,31 @@ public class SelectValuesNestedInNestedTests
     }
 
     [Fact]
+    public void SelectValues_Should_ReturnEmptyElement_InNestedAsteriskInNested()
+    {
+        var model = NestedInNestedModel.GetSample();
+        var navi = new JsonPathModelNavigator(new NavigatorConfigOptions { FailOnCollectionKeyNotFound = false });
+
+        Assert.Empty(navi.SelectValues(model, "$.List[*].Dict['50']"));
+    }
+
+    [Fact]
     public void SelectValues_Should_ReturnElement_InNestedInNested()
     {
         var model = NestedInNestedModel.GetSample();
         var navi = new JsonPathModelNavigator(new NavigatorConfigOptions { FailOnCollectionKeyNotFound = false });
 
         Assert.NotEmpty(navi.SelectValues(model, "$.List[0].Dict['10']"));
+        Assert.Equal(model.List[0].Dict["10"].Id, navi.SelectValues(model, "$.List[0].Dict['10'].Id").First());
+    }
+
+    [Fact]
+    public void SelectValues_Should_ReturnElement_InNestedAsteriskInNested()
+    {
+        var model = NestedInNestedModel.GetSample();
+        var navi = new JsonPathModelNavigator(new NavigatorConfigOptions { FailOnCollectionKeyNotFound = false });
+
+        Assert.NotEmpty(navi.SelectValues(model, "$.List[*].Dict['10']"));
         Assert.Equal(model.List[0].Dict["10"].Id, navi.SelectValues(model, "$.List[0].Dict['10'].Id").First());
     }
 }

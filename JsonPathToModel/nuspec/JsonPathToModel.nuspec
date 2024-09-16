@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
     <id>JsonPathToModel</id>
-    <version>1.5.7</version>
+    <version>1.5.8</version>
     <authors>Binoculars X</authors>
     <owners>Binoculars X</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
