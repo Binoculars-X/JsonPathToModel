@@ -45,6 +45,14 @@ public class HackingExtensionsTests
     }
 
     [Fact]
+    public void HackingExtensions_Should_Update_Protected_FullNotation()
+    {
+        var target = new HackingExtensionsTestsSample();
+        target.WithHack("$._protected", "test");
+        Assert.Equal("test", target.StealString("$._protected"));
+    }
+
+    [Fact]
     public void HackingExtensions_Should_Update_Protected()
     {
         var target = new HackingExtensionsTestsSample();
