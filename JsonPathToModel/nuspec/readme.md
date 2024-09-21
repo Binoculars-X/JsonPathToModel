@@ -57,6 +57,9 @@ public class SampleNested
 
 **Release Notes**
 
+**1.6.0+**
+- added HackingExtensions: WithHack, StealValue, StealString
+
 **1.5.0+**
 - added ModelStateExplorer to create JsonPath for type properties and fields
 - added support of fields

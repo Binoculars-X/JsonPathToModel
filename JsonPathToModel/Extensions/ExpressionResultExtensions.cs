@@ -63,7 +63,7 @@ internal static class ExpressionResultExtensions
                     continue;
                 }
 
-                var items = ExtractCollectionItems(result.Expression, collection);
+                var items = ExtractCollectionItems(result.Expression, collection, lastToken, options);
                 resultList.AddRange(items);
             }
         }
@@ -262,7 +262,8 @@ internal static class ExpressionResultExtensions
         }
     }
 
-    private static List<object?>? ExtractCollectionItems(string expression, ICollection collection)
+    private static List<object?>? ExtractCollectionItems(string expression, ICollection collection, TokenInfo token,
+        NavigatorConfigOptions? options)
     {
         var resultList = new List<object?>();
         var dictObj = collection as IDictionary;
@@ -270,16 +271,50 @@ internal static class ExpressionResultExtensions
 
         if (dictObj != null)
         {
-            foreach (var item in dictObj.Values)
+            if (token.CollectionDetails.Literal != "")
             {
-                resultList.Add(item);
+                if (!dictObj.Contains(token.CollectionDetails.Literal))
+                {
+                    if (options?.FailOnCollectionKeyNotFound == true)
+                    {
+                        throw new NavigationException($"Path '{expression}': dictionary key '{token.CollectionDetails.Literal}' not found");
+                    }
+
+                    //resultList.Add(null);
+                }
+                else
+                {
+                    resultList.Add(dictObj[token.CollectionDetails.Literal]);
+                }
+            }
+            else
+            {
+                foreach (var item in dictObj.Values)
+                {
+                    resultList.Add(item);
+                }
             }
         }
         else if (listObj != null)
         {
-            foreach (var item in listObj)
+            if (token.CollectionDetails.Index != null)
             {
-                resultList.Add(item);
+                if (!options.FailOnCollectionKeyNotFound && token.CollectionDetails.Index >= listObj.Count)
+                {
+                    // return null instead of exception if FailOnCollectionKeyNotFound == false
+                    //resultList.Add(null);
+                }
+                else
+                {
+                    resultList.Add(listObj[token.CollectionDetails.Index.Value]);
+                }
+            }
+            else
+            {
+                foreach (var item in listObj)
+                {
+                    resultList.Add(item);
+                }
             }
         }
         else
@@ -303,7 +338,7 @@ internal static class ExpressionResultExtensions
                 return emptyResult;
             }
 
-            var items = ExtractCollectionItems(expression, collection);
+            var items = ExtractCollectionItems(expression, collection, token, options);
             return items;
         }
 
