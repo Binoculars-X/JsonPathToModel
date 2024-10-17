@@ -111,6 +111,7 @@ If you like what I do and it is helpful, you can give me a cup of coffee :)
 
 **1.6.0+**
 - added HackingExtensions: WithHack, StealValue, StealString
+- upgraded System.Text.Json to 8.0.5
 
 **1.5.0+**
 - added ModelStateExplorer to create JsonPath for type properties and fields
