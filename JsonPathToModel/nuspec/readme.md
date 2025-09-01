@@ -57,6 +57,9 @@ public class SampleNested
 
 **Release Notes**
 
+**2.3.0+**
+- added full support of Sigil IL oprimizations including collections
+
 **2.1.0+**
 - added ExecutePrivate and ExecutePrivateStatic reflection extentions 
 
